@@ -16,7 +16,7 @@ function triangular_test_functions(c1::Int, c2::Int, c3::Int; L::Int=32, shuffle
   u = rand(Uniform(0,1),1)[1]
   ϵ = rand(Normal(0,1),(L,c1+c2+c3))
 
-  y = vcat(ones(c1), ones(c2) .+ 1, ones(c3) .+ 2)
+  y = string.(vcat(ones(c1), ones(c2) .+ 1, ones(c3) .+ 2))
 
   H₁ = Array{Float64,2}(undef,L,c1)
   H₂ = Array{Float64,2}(undef,L,c2)
