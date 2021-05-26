@@ -44,7 +44,7 @@ md"## A Brief History"
 # ╔═╡ c195f5d9-2538-4278-9d27-c14446e7cb65
 md"**Local Discriminant Basis (LDB)** is a wavelet based feature extraction method concieved by Naoki Saito in 1992. Earlier that year, [Victor Wickerhauser](https://www.math.wustl.edu/~victor/) had generalized the best basis algorithm such that it worked not only for a single signal, but for a collection of signals that share the same important features. The so called Joint Best Basis (JBB) can be viewed as a time-frequency localized version of the Principle Component Analysis(PCA) or the Karhunen-Loève Basis (KLB).\
 \
-While JBB is good for signals belonging to the same class (i.e. share the same features), it does not work for signal classifications in general. LDB sets out to solve this issue by replacing the original minimum entropy cost function used in the JBB with the Kullback-Leiber divergence (a.k.a. relative entropy). More specifically,
+While JBB is good for signals belonging to the same class (i.e. share the same features), it does not work for signal classifications in general. LDB sets out to solve this issue by replacing the original minimum entropy cost function used in the JBB with the Kullback-Leibler divergence (a.k.a. relative entropy). More specifically,
 
 1. Decomposes individual signals into time-frequency dictionaries. 
 2. Creates a time-frequency energy distribution for each class by accumulating these dictionaries.
@@ -111,11 +111,14 @@ md"After the features have been extracted, we can use a conventional classifier 
 # ╔═╡ dc5ba00d-1a5b-4233-96a6-73981882345a
 md"### Library of Orthonormal Bases"
 
+# ╔═╡ 01a254f4-9575-4ab2-af6a-27ad5ef8efde
+md"The LDB algorithm begins by decomposing each signal into a dictionary of orthonormal bases. Each dictionary is a binary tree where each node is a subspace of $\mathbf{w}_{0,0} = \mathbb{R}^n$. Examples of dictionaries include wavelet packet bases, local trigonometric bases, and local Fourier bases. In the figure below, we illustrate the wavelet packet bases where $G$, $H$, and $f$ represent the scaling (lowpass) analysis filters, wavelet (highpass) analysis filters, and the frequency axis respectively. By decomposing a signal as such, information about the signal at a specific time and frequency can be encoded within each node, which can then be used to distinguish different classes of signals."
+
 # ╔═╡ 9f7c2639-c455-425a-a2ab-0deac638b47f
-img_path = "../wpt-figure.png"
+img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/wpt-figure.png";
 
 # ╔═╡ b2db449c-0fe5-482a-9e85-9062a218df03
-md"""Hello I am a dog $(Resource(img_path))"""
+md"""$(Resource(img_url, :width => 500))"""
 
 # ╔═╡ 1c4b794f-2b17-429d-809a-2f69f0a82e41
 md"### Energy Map"
@@ -405,8 +408,9 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─25720fa1-ad95-451d-8143-ba34b6e0551b
 # ╟─e0c92531-1e17-4757-885d-408d62829766
 # ╟─dc5ba00d-1a5b-4233-96a6-73981882345a
+# ╟─01a254f4-9575-4ab2-af6a-27ad5ef8efde
 # ╟─9f7c2639-c455-425a-a2ab-0deac638b47f
-# ╠═b2db449c-0fe5-482a-9e85-9062a218df03
+# ╟─b2db449c-0fe5-482a-9e85-9062a218df03
 # ╟─1c4b794f-2b17-429d-809a-2f69f0a82e41
 # ╟─a3b05137-0499-45c1-bbce-79784dbf59dc
 # ╟─55528ce0-3374-4d13-bb6f-61df9f854a39
