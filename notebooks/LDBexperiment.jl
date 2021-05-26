@@ -123,19 +123,48 @@ md"""$(Resource(img_url, :width => 500))"""
 # ╔═╡ 1c4b794f-2b17-429d-809a-2f69f0a82e41
 md"### Energy Map"
 
+# ╔═╡ 6b57c129-7c8e-407e-a186-03c77d149d9d
+
+
 # ╔═╡ a3b05137-0499-45c1-bbce-79784dbf59dc
 md"**Normalized energies**"
 
 # ╔═╡ 55528ce0-3374-4d13-bb6f-61df9f854a39
-md"$\hat{V}_i^{(y)} = \frac{\Sigma_{k=1}^{N_y}|\mathbf{w_i}\cdot\mathbf{x}_k^{(y)}|^2}{\Sigma_k^{N_y}||\mathbf{x}_k^{(y)}||^2}$"
+md"
+$V_i^{(y)} \triangleq 
+\frac{
+	E\left[Z_i^2|Y=y\right]
+}{
+	\sum_{i=1}^n E\left[Z_i^2|Y=y\right]
+}
+\to 
+\hat{V}_i^{(y)} = 
+
+\frac{
+	\sum_{k=1}^{N_y} \left\| \boldsymbol{w}_i \cdot \boldsymbol{x}_k^{(y)}\right\|^2
+}{
+	\sum_k^{N_y} \left\| \boldsymbol{x}_k^{(y)} \right\|^2
+}$"
+
+# ╔═╡ 964f8fcd-0516-4c6f-a02a-6db5dd497520
+em_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/normalized-energy-map.png";
+
+# ╔═╡ 8d2707f8-a982-4c83-b14a-1a2deb6743b4
+md"""$(Resource(em_img_url))"""
 
 # ╔═╡ fb91da71-303f-4c43-be7b-e39df1429355
-md"**Probability density functions**
+md"**Probability density**
 
-We can also estimate the probability density of each class by using non-parametric density estimators such as Average Shifted Histogram (ASH)."
+Another way to estimate $E\left[Z_i^2|Y=y\right]$ is to use kernel density estimators. The LDB algorithm in `WaveletsExt.jl` uses a method called Average Shifted Histograms(ASH)."
 
 # ╔═╡ af1b235e-6fff-478f-a5c1-38fbc6c39b8f
 md"$q_i^{(y)}(z) = \int_{\mathbf{w_i \cdot x=z}}p(x|y)d\mathbf{x} \to \hat{q}_i^{(y)}(z)$"
+
+# ╔═╡ d9973444-b859-4377-bcf0-2c6885933380
+pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-energy-map.png";
+
+# ╔═╡ d27634a5-e703-4fa2-bc1a-d7297b2388a3
+
 
 # ╔═╡ e0a525ed-35f0-48cc-8403-ddfe03871074
 md"**Select** the type of energy map to use"
@@ -159,6 +188,9 @@ md"### Discriminant Measure"
 md"Asymmetric Relative Entropy (Kullback-Leibler divergence):
 
 $D_{KL}(p,q) = \int_{-\infty}^{\infty}p(x)\log_2\frac{p(x)}{q(x)}dx$"
+
+# ╔═╡ 180cf538-13a7-4361-a951-0ca2b7d252ab
+
 
 # ╔═╡ ed92e98f-e823-45a6-a401-342f584c333e
 md" $L^P$ entropy
@@ -225,16 +257,19 @@ md"The plot below shows represents the best basis tree (dictionary of orthogonal
 # ╔═╡ 6d968714-1058-4771-8964-20621ca9ffc6
 plot_tfbdry(ldb₀.tree)
 
+# ╔═╡ 3ece6ff2-adaf-476b-bd01-dbd48dc00f15
+md"Normalized energy map/probability density of each class."
+
 # ╔═╡ f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 begin
-	hmap1 = Plots.heatmap(ldb₀.Γ[:,:,1]',xlabel="Class 1",legend=false);
-	hmap2 = Plots.heatmap(ldb₀.Γ[:,:,2]',xlabel="Class 2",legend=false);
-	hmap3 = Plots.heatmap(ldb₀.Γ[:,:,3]',xlabel="Class 3",legend=false);
+	hmap1 = Plots.heatmap(ldb₀.Γ[:,:,1]',yflip=true,xlabel="Class 1",legend=false);
+	hmap2 = Plots.heatmap(ldb₀.Γ[:,:,2]',yflip=true,xlabel="Class 2",legend=false);
+	hmap3 = Plots.heatmap(ldb₀.Γ[:,:,3]',yflip=true, xlabel="Class 3",legend=false);
 	Plots.plot(hmap1, hmap2, hmap3, layout=(3,1))
 end
 
 # ╔═╡ 121fd299-5e82-4159-8472-5d385c736c18
-Plots.heatmap(discriminant_measure(ldb₀.Γ, dm[d_measure])')
+Plots.heatmap(discriminant_measure(ldb₀.Γ, dm[d_measure])',yflip=true)
 
 # ╔═╡ 96a49a0c-4646-43f9-98c2-09ac484f6df8
 md"## Signal Classification"
@@ -412,15 +447,21 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─9f7c2639-c455-425a-a2ab-0deac638b47f
 # ╟─b2db449c-0fe5-482a-9e85-9062a218df03
 # ╟─1c4b794f-2b17-429d-809a-2f69f0a82e41
+# ╠═6b57c129-7c8e-407e-a186-03c77d149d9d
 # ╟─a3b05137-0499-45c1-bbce-79784dbf59dc
 # ╟─55528ce0-3374-4d13-bb6f-61df9f854a39
+# ╠═964f8fcd-0516-4c6f-a02a-6db5dd497520
+# ╠═8d2707f8-a982-4c83-b14a-1a2deb6743b4
 # ╟─fb91da71-303f-4c43-be7b-e39df1429355
 # ╟─af1b235e-6fff-478f-a5c1-38fbc6c39b8f
+# ╟─d9973444-b859-4377-bcf0-2c6885933380
+# ╠═d27634a5-e703-4fa2-bc1a-d7297b2388a3
 # ╟─e0a525ed-35f0-48cc-8403-ddfe03871074
 # ╟─9eee7238-6e9c-4837-a30b-ebd09abdcca6
 # ╟─fd63c142-ae62-40a2-b34f-986c803ddb72
 # ╟─4f8a7bb5-db64-4f82-8544-c961cca068db
 # ╟─e77667ca-9bb8-4f30-b5ba-ff107eb9a568
+# ╠═180cf538-13a7-4361-a951-0ca2b7d252ab
 # ╟─ed92e98f-e823-45a6-a401-342f584c333e
 # ╟─0b12ee12-9229-486f-aa65-1da5c53955cc
 # ╟─885cc8dd-dc5a-4d28-be72-2e26613ec252
@@ -435,7 +476,8 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╠═d55eb3ed-cf38-4f51-8245-fdb427312eb8
 # ╟─0e4f9614-6972-4993-9d65-f4cf515553bd
 # ╠═6d968714-1058-4771-8964-20621ca9ffc6
-# ╠═f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
+# ╟─3ece6ff2-adaf-476b-bd01-dbd48dc00f15
+# ╟─f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 # ╠═121fd299-5e82-4159-8472-5d385c736c18
 # ╟─96a49a0c-4646-43f9-98c2-09ac484f6df8
 # ╟─406e7ffe-fa01-4622-ae09-aca5473bfe6c
