@@ -120,11 +120,11 @@ img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/
 # ╔═╡ b2db449c-0fe5-482a-9e85-9062a218df03
 md"""$(Resource(img_url, :width => 500))"""
 
+# ╔═╡ 964f8fcd-0516-4c6f-a02a-6db5dd497520
+em_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/normalized-energy-map.png";
+
 # ╔═╡ 1c4b794f-2b17-429d-809a-2f69f0a82e41
 md"### Energy Map"
-
-# ╔═╡ 6b57c129-7c8e-407e-a186-03c77d149d9d
-
 
 # ╔═╡ a3b05137-0499-45c1-bbce-79784dbf59dc
 md"**Normalized energies**"
@@ -146,11 +146,11 @@ $V_i^{(y)} \triangleq
 	\sum_k^{N_y} \left\| \boldsymbol{x}_k^{(y)} \right\|^2
 }$"
 
-# ╔═╡ 964f8fcd-0516-4c6f-a02a-6db5dd497520
-em_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/normalized-energy-map.png";
-
 # ╔═╡ 8d2707f8-a982-4c83-b14a-1a2deb6743b4
 md"""$(Resource(em_img_url))"""
+
+# ╔═╡ d9973444-b859-4377-bcf0-2c6885933380
+pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-energy-map.png";
 
 # ╔═╡ fb91da71-303f-4c43-be7b-e39df1429355
 md"**Probability density**
@@ -158,13 +158,14 @@ md"**Probability density**
 Another way to estimate $E\left[Z_i^2|Y=y\right]$ is to use kernel density estimators. The LDB algorithm in `WaveletsExt.jl` uses a method called Average Shifted Histograms(ASH)."
 
 # ╔═╡ af1b235e-6fff-478f-a5c1-38fbc6c39b8f
-md"$q_i^{(y)}(z) = \int_{\mathbf{w_i \cdot x=z}}p(x|y)d\mathbf{x} \to \hat{q}_i^{(y)}(z)$"
+md"
+$q_i^{(y)}(z) \triangleq 
 
-# ╔═╡ d9973444-b859-4377-bcf0-2c6885933380
-pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-energy-map.png";
+\int_{\boldsymbol{w}_i \cdot \boldsymbol{x}=\boldsymbol{z}}
+	p(\boldsymbol{x}|y)d\boldsymbol{x} \to \hat{q}_i^{(y)}(z)$"
 
 # ╔═╡ d27634a5-e703-4fa2-bc1a-d7297b2388a3
-
+md"""$(Resource(pem_img_url))"""
 
 # ╔═╡ e0a525ed-35f0-48cc-8403-ddfe03871074
 md"**Select** the type of energy map to use"
@@ -188,9 +189,6 @@ md"### Discriminant Measure"
 md"Asymmetric Relative Entropy (Kullback-Leibler divergence):
 
 $D_{KL}(p,q) = \int_{-\infty}^{\infty}p(x)\log_2\frac{p(x)}{q(x)}dx$"
-
-# ╔═╡ 180cf538-13a7-4361-a951-0ca2b7d252ab
-
 
 # ╔═╡ ed92e98f-e823-45a6-a401-342f584c333e
 md" $L^P$ entropy
@@ -446,22 +444,20 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─01a254f4-9575-4ab2-af6a-27ad5ef8efde
 # ╟─9f7c2639-c455-425a-a2ab-0deac638b47f
 # ╟─b2db449c-0fe5-482a-9e85-9062a218df03
+# ╟─964f8fcd-0516-4c6f-a02a-6db5dd497520
 # ╟─1c4b794f-2b17-429d-809a-2f69f0a82e41
-# ╠═6b57c129-7c8e-407e-a186-03c77d149d9d
 # ╟─a3b05137-0499-45c1-bbce-79784dbf59dc
 # ╟─55528ce0-3374-4d13-bb6f-61df9f854a39
-# ╠═964f8fcd-0516-4c6f-a02a-6db5dd497520
-# ╠═8d2707f8-a982-4c83-b14a-1a2deb6743b4
+# ╟─8d2707f8-a982-4c83-b14a-1a2deb6743b4
+# ╟─d9973444-b859-4377-bcf0-2c6885933380
 # ╟─fb91da71-303f-4c43-be7b-e39df1429355
 # ╟─af1b235e-6fff-478f-a5c1-38fbc6c39b8f
-# ╟─d9973444-b859-4377-bcf0-2c6885933380
-# ╠═d27634a5-e703-4fa2-bc1a-d7297b2388a3
+# ╟─d27634a5-e703-4fa2-bc1a-d7297b2388a3
 # ╟─e0a525ed-35f0-48cc-8403-ddfe03871074
 # ╟─9eee7238-6e9c-4837-a30b-ebd09abdcca6
 # ╟─fd63c142-ae62-40a2-b34f-986c803ddb72
 # ╟─4f8a7bb5-db64-4f82-8544-c961cca068db
 # ╟─e77667ca-9bb8-4f30-b5ba-ff107eb9a568
-# ╠═180cf538-13a7-4361-a951-0ca2b7d252ab
 # ╟─ed92e98f-e823-45a6-a401-342f584c333e
 # ╟─0b12ee12-9229-486f-aa65-1da5c53955cc
 # ╟─885cc8dd-dc5a-4d28-be72-2e26613ec252
