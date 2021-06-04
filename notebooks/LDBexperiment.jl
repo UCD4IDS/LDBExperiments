@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.4
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -42,9 +42,9 @@ md"# Local Discriminant Basis
 md"## A Brief History"
 
 # ╔═╡ c195f5d9-2538-4278-9d27-c14446e7cb65
-md"**Local Discriminant Basis (LDB)** is a wavelet based feature extraction method concieved by Naoki Saito in 1992. Earlier that year, [Victor Wickerhauser](https://www.math.wustl.edu/~victor/) had generalized the best basis algorithm such that it worked not only for a single signal, but for a collection of signals that share the same important features. The so called Joint Best Basis (JBB) can be viewed as a time-frequency localized version of the Principle Component Analysis(PCA) or the Karhunen-Loève Basis (KLB).\
+md"**Local Discriminant Basis (LDB)** is a wavelet based feature extraction method concieved by [Naoki Saito](https://www.math.ucdavis.edu/~saito) in Fall 1993. Earlier in 1992, [Victor Wickerhauser](https://www.math.wustl.edu/~victor/) had generalized the best basis algorithm such that it worked not only for a single signal, but for a collection of signals that share the same important features. The so called Joint Best Basis (JBB) can be viewed as a time-frequency localized version of the Principle Component Analysis (PCA) or the Karhunen-Loève Basis (KLB).\
 \
-While JBB is good for signals belonging to the same class (i.e. share the same features), it does not work for signal classifications in general. LDB sets out to solve this issue by replacing the original minimum entropy cost function used in the JBB with the Kullback-Leibler divergence (a.k.a. relative entropy). More specifically,
+While JBB is good for signals belonging to the same class (i.e., share the same features), it does not work for signal classifications in general. LDB sets out to solve this issue by replacing the original minimum entropy cost function used in the JBB with the Kullback-Leibler divergence (a.k.a. relative entropy). More specifically,
 
 1. Decomposes individual signals into time-frequency dictionaries. 
 2. Creates a time-frequency energy distribution for each class by accumulating these dictionaries.
@@ -295,7 +295,7 @@ begin
 end;
 
 # ╔═╡ 2d398c73-37bc-44d4-8559-e220de94624d
-md"Next, we will load some machine learning models from `MLJ.jl`. We will include two very basic decision tree models(with and without pruning), Linear Discriminant classifier (LDA), Multinomial classifier with L1 regularization (i.e. LASSO), and finally a Random Forest classifier" 
+md"Next, we will load some machine learning models from `MLJ.jl`. We will include two very basic decision tree models(with and without pruning), Linear Discriminant classifier (LDA), Multinomial classifier with L1 regularization (i.e., LASSO), and finally a Random Forest classifier" 
 
 # ╔═╡ 7a7cae84-3272-4303-80fa-d56a8615b9ff
 begin
@@ -321,7 +321,7 @@ end;
 md"### 1. Training models using the original signal"
 
 # ╔═╡ b0e3e833-47d6-493e-bb51-940267e6f85d
-md"To evaluate the LDB algorithm's performance we first train the models using the original signals as input (i.e. Euclidean coordinates). To evaluate the training loss, we will perform a 5 fold cross validation."
+md"To evaluate the LDB algorithm's performance we first train the models using the original signals as input (i.e., Euclidean coordinates). To evaluate the training loss, we will perform a 5 fold cross validation."
 
 # ╔═╡ fded58ea-e7b1-4be1-b952-b7aa1358d5dd
 function evaluate_model(model::String, dat::String, X, y)
