@@ -150,7 +150,7 @@ $V_i^{(y)} \triangleq
 md"""$(Resource(em_img_url))"""
 
 # ╔═╡ d9973444-b859-4377-bcf0-2c6885933380
-pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-energy-map.png";
+pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-density-map.png";
 
 # ╔═╡ fb91da71-303f-4c43-be7b-e39df1429355
 md"**Probability density**
@@ -185,10 +185,19 @@ em = Dict(["Time Frequency"=>TimeFrequency(), "Probability Density"=>Probability
 # ╔═╡ 4f8a7bb5-db64-4f82-8544-c961cca068db
 md"### Discriminant Measure"
 
+# ╔═╡ a0525192-f1d9-4173-960e-ea3c009e067b
+md"For each cell within the energy map, we can quatify the difference between each pair of classes by choosing an appropriate chosen discriminant measure. `WaveletsExt.jl` implements four different types of discriminant measures: asymmetic relative entropy, symmetric relative entropy, $L^P$ entropy, and Hellinger distance. The definition for each type of discriminant measure is shown below."
+
 # ╔═╡ e77667ca-9bb8-4f30-b5ba-ff107eb9a568
 md"Asymmetric Relative Entropy (Kullback-Leibler divergence):
 
 $D_{KL}(p,q) = \int_{-\infty}^{\infty}p(x)\log_2\frac{p(x)}{q(x)}dx$"
+
+# ╔═╡ 885cc8dd-dc5a-4d28-be72-2e26613ec252
+md"Symmetric Relative Entropy
+
+$$D_S(p,q) = D_{KL}(p,q) + D_{KL}(q,p)$$
+"
 
 # ╔═╡ ed92e98f-e823-45a6-a401-342f584c333e
 md" $L^P$ entropy
@@ -200,12 +209,6 @@ md"Hellinger distance
 
 $D_H(p,q)=\int_{-\infty}^{\infty}\left(\sqrt{p(x)} - \sqrt{q(x)}\right)^2dx$" 
 
-# ╔═╡ 885cc8dd-dc5a-4d28-be72-2e26613ec252
-md"Symmetric Relative Entropy
-
-$$D_S(p,q) = D_{KL}(p,q) + D_{KL}(q,p)$$
-"
-
 # ╔═╡ 05a9e8db-fce0-4d12-b67b-c0089621ae07
 md"**Select** the type of discriminant measure to use"
 
@@ -213,8 +216,8 @@ md"**Select** the type of discriminant measure to use"
 @bind d_measure Radio(
 	[
 		"Asymmetric Relative Entropy",
-		"Lp Entropy",
 		"Symmetric Relative Entropy",
+		"Lp Entropy",
 		"Hellinger Distance"
 	],
 	default = "Asymmetric Relative Entropy"
@@ -227,6 +230,15 @@ dm = Dict([
 		"Symmetric Relative Entropy" => SymmetricRelativeEntropy(),
 		"Hellinger Distance" => HellingerDistance()
 	])
+
+# ╔═╡ 86df0e34-8f77-4d6e-8f40-6f4d8e706c15
+md"By adding the discriminant measures between each pair of classes together, we can obtain a matrix where the most discriminant cells (i.e. features) have the largest values and the least discriminant cells have the lowest values."
+
+# ╔═╡ ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
+
+
+# ╔═╡ 9c4cf3a1-cd6a-4a42-acce-ceaca6c66df2
+md"We can use this discriminant measure matrix to prune our binary tree. We will eliminate the children nodes of the sum of their discriminant measure is smaller or equal to the discriminant measure of their parent node."
 
 # ╔═╡ df7c5ef9-73ff-44b7-aacb-d5fa132d7c2b
 md"You can also choose the number of features you want to extract. You can use the slider below to choose any thing from a single feature to all features (32 in this case)."
@@ -457,13 +469,17 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─9eee7238-6e9c-4837-a30b-ebd09abdcca6
 # ╟─fd63c142-ae62-40a2-b34f-986c803ddb72
 # ╟─4f8a7bb5-db64-4f82-8544-c961cca068db
+# ╟─a0525192-f1d9-4173-960e-ea3c009e067b
 # ╟─e77667ca-9bb8-4f30-b5ba-ff107eb9a568
+# ╟─885cc8dd-dc5a-4d28-be72-2e26613ec252
 # ╟─ed92e98f-e823-45a6-a401-342f584c333e
 # ╟─0b12ee12-9229-486f-aa65-1da5c53955cc
-# ╟─885cc8dd-dc5a-4d28-be72-2e26613ec252
 # ╟─05a9e8db-fce0-4d12-b67b-c0089621ae07
 # ╟─28604f68-a957-4a3c-92f5-13a0ff4ba158
 # ╟─b27a4714-cbda-417e-85e1-26d7d98780ee
+# ╟─86df0e34-8f77-4d6e-8f40-6f4d8e706c15
+# ╠═ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
+# ╟─9c4cf3a1-cd6a-4a42-acce-ceaca6c66df2
 # ╟─df7c5ef9-73ff-44b7-aacb-d5fa132d7c2b
 # ╟─f1c6268b-a6d5-445a-9e52-748898ec08da
 # ╟─9e523918-daaf-4c17-851a-7fac12b04cd3
