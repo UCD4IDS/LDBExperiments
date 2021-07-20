@@ -231,11 +231,14 @@ dm = Dict([
 		"Hellinger Distance" => HellingerDistance()
 	])
 
+# ╔═╡ 7dc1ba75-fa54-4d59-9b54-93e01da7211e
+dmm_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/discriminant-measure-map.png";
+
 # ╔═╡ 86df0e34-8f77-4d6e-8f40-6f4d8e706c15
 md"By adding the discriminant measures between each pair of classes together, we can obtain a matrix where the most discriminant cells (i.e. features) have the largest values and the least discriminant cells have the lowest values."
 
 # ╔═╡ ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
-
+md"""$(Resource(dmm_img_url))"""
 
 # ╔═╡ 9c4cf3a1-cd6a-4a42-acce-ceaca6c66df2
 md"We can use this discriminant measure matrix to prune our binary tree. We will eliminate the children nodes of the sum of their discriminant measure is smaller or equal to the discriminant measure of their parent node."
@@ -477,8 +480,9 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─05a9e8db-fce0-4d12-b67b-c0089621ae07
 # ╟─28604f68-a957-4a3c-92f5-13a0ff4ba158
 # ╟─b27a4714-cbda-417e-85e1-26d7d98780ee
+# ╟─7dc1ba75-fa54-4d59-9b54-93e01da7211e
 # ╟─86df0e34-8f77-4d6e-8f40-6f4d8e706c15
-# ╠═ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
+# ╟─ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
 # ╟─9c4cf3a1-cd6a-4a42-acce-ceaca6c66df2
 # ╟─df7c5ef9-73ff-44b7-aacb-d5fa132d7c2b
 # ╟─f1c6268b-a6d5-445a-9e52-748898ec08da
