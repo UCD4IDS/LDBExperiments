@@ -39,7 +39,7 @@ md"# Local Discriminant Basis
 **Author**: Shozen Dan"
 
 # ╔═╡ f3a892ef-0c5a-4d4a-86ab-036d913d9d97
-md"## A Brief History"
+md"## I. A Brief History"
 
 # ╔═╡ c195f5d9-2538-4278-9d27-c14446e7cb65
 md"**Local Discriminant Basis (LDB)** is a wavelet based feature extraction method concieved by [Naoki Saito](https://www.math.ucdavis.edu/~saito) in Fall 1993. Earlier in 1992, [Victor Wickerhauser](https://www.math.wustl.edu/~victor/) had generalized the best basis algorithm such that it worked not only for a single signal, but for a collection of signals that share the same important features. The so called Joint Best Basis (JBB) can be viewed as a time-frequency localized version of the Principle Component Analysis (PCA) or the Karhunen-Loève Basis (KLB).\
@@ -59,7 +59,12 @@ For more on LDB, please visit the following resources:
 "
 
 # ╔═╡ a751cd87-80c5-48b1-b798-f1aecebc08a1
-md"## Short Tutorial"
+md"## II. Tutorial"
+
+# ╔═╡ 4e5fe030-8a87-4f4a-88a4-b7b824157880
+md"**Auto run:** Check the box to start the tutorial
+
+$(@bind autorun CheckBox())"
 
 # ╔═╡ b8077eb3-ec64-4a84-9dcc-3aafce015597
 md"We begin by obtaining some signals to classify. Using `ClassData()` alongside `generateclassdata()`, we can generate 2 different sets of signals (Cylinder-Bell-Funnel, Triangular waveform), each consisting of 3 classes of signals."
@@ -180,7 +185,7 @@ md"**Select** the type of energy map to use"
 )
 
 # ╔═╡ fd63c142-ae62-40a2-b34f-986c803ddb72
-em = Dict(["Time Frequency"=>TimeFrequency(), "Probability Density"=>ProbabilityDensity()])
+em = Dict(["Time Frequency"=>TimeFrequency(), "Probability Density"=>ProbabilityDensity()]);
 
 # ╔═╡ 4f8a7bb5-db64-4f82-8544-c961cca068db
 md"### Discriminant Measure"
@@ -229,7 +234,7 @@ dm = Dict([
 		"Lp Entropy" => LpEntropy(),
 		"Symmetric Relative Entropy" => SymmetricRelativeEntropy(),
 		"Hellinger Distance" => HellingerDistance()
-	])
+	]);
 
 # ╔═╡ 7dc1ba75-fa54-4d59-9b54-93e01da7211e
 dmm_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/discriminant-measure-map.png";
@@ -240,11 +245,17 @@ md"By adding the discriminant measures between each pair of classes together, we
 # ╔═╡ ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
 md"""$(Resource(dmm_img_url))"""
 
+# ╔═╡ f0c4b67e-208e-41a4-9510-c47e04a65e20
+prn_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/pruning.png";
+
 # ╔═╡ 9c4cf3a1-cd6a-4a42-acce-ceaca6c66df2
-md"We can use this discriminant measure matrix to prune our binary tree. We will eliminate the children nodes of the sum of their discriminant measure is smaller or equal to the discriminant measure of their parent node."
+md"We can use this discriminant measure matrix to prune our binary tree. The pruning algorithm will start from the bottom of the tree and will eliminate the children nodes if the sum of their discriminant measure is smaller or equal to the discriminant measure of their parent node. This pruning process can not only identify features that are most disciminant, but also reduce the computational resources required for to perform LDB."
+
+# ╔═╡ 299c91a6-c315-4299-97fc-57a6b6f419b5
+md"""$(Resource(prn_img_url))"""
 
 # ╔═╡ df7c5ef9-73ff-44b7-aacb-d5fa132d7c2b
-md"You can also choose the number of features you want to extract. You can use the slider below to choose any thing from a single feature to all features (32 in this case)."
+md"After the pruning, we can sort the coefficients by their discriminant power and extract the top n features (wavelet coefficient) to perform dimensionality reduction. We can pass the selected features to ML classification algorithms such as logistic regression, support vector machine, random forests, etc."
 
 # ╔═╡ f1c6268b-a6d5-445a-9e52-748898ec08da
 md"**Select** the number of features to extract"
@@ -252,63 +263,175 @@ md"**Select** the number of features to extract"
 # ╔═╡ 9e523918-daaf-4c17-851a-7fac12b04cd3
 @bind dim Slider(1:length(X₀[:,1]), default=10, show_value=true)
 
+# ╔═╡ 22a8dfdb-c046-4614-8e2b-aab22d12b205
+md"To run the LDB algorithm using `WaveletsExt.jl`, we begin by calling `LocalDiscriminantBasis` constructor to specify the parameters. We need to pass 4 arguments to the constructor:
+
+1. The type of wavelet filter to use
+2. The type of discriminant measure to use
+3. The type of energy map to use
+4. The number of features to extract (can be changed at a later stage)"
+
+# ╔═╡ 09bc8c83-2f25-44a0-81ab-9f0a5724673f
+md"After the model parameters are specified, the LDB model is trained using the `fit!` method. This follows the syntax in `MLJ.jl`."
+
 # ╔═╡ 2c9b5aef-ba63-44b6-8ef9-ca31cc682fad
-ldb₀ = LocalDiscriminantBasis(wt = wavelet(WT.coif6),
-					   		  dm = dm[d_measure],
-					   		  en = em[e_measure],
-							  n_features = dim)
+if autorun
+	ldb₀ = LocalDiscriminantBasis(wt = wavelet(WT.coif6),
+								  dm = dm[d_measure],
+								  en = em[e_measure],
+								  n_features = dim)
+	WaveletsExt.fit!(ldb₀, X₀, y₀)
+end
 
-# ╔═╡ 2a9efa07-447e-46d8-b0a6-8560a6765a1f
-md"The `ldb` function will return a vector of features sorted by their disciminant power as well as a vector with the discriminant measures as well. We can visually select the number of features to use by creating a scree plot and choosing the *elbow*."
-
-# ╔═╡ d55eb3ed-cf38-4f51-8245-fdb427312eb8
-WaveletsExt.fit!(ldb₀, X₀, y₀)
-
-# ╔═╡ 0e4f9614-6972-4993-9d65-f4cf515553bd
-md"The plot below shows represents the best basis tree (dictionary of orthogonal bases) that maximizes the discriminant measure between the 3 classes of signals."
-
-# ╔═╡ 6d968714-1058-4771-8964-20621ca9ffc6
-plot_tfbdry(ldb₀.tree)
-
-# ╔═╡ 3ece6ff2-adaf-476b-bd01-dbd48dc00f15
-md"Normalized energy map/probability density of each class."
+# ╔═╡ ae624404-0770-41e9-962b-139006356ea6
+md"`WaveletsExt.jl` provides interfaces to understand the results of LDB. For example we can visualize the energy/probability density maps for each class by accessing the `Γ` attribute in the fitted LDB object. The plots below shows the energy/probability density maps for each class, where darker colors indicate that the sub-band has a higher discriminant power."
 
 # ╔═╡ f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 begin
-	hmap1 = Plots.heatmap(ldb₀.Γ[:,:,1]',yflip=true,xlabel="Class 1",legend=false);
-	hmap2 = Plots.heatmap(ldb₀.Γ[:,:,2]',yflip=true,xlabel="Class 2",legend=false);
-	hmap3 = Plots.heatmap(ldb₀.Γ[:,:,3]',yflip=true, xlabel="Class 3",legend=false);
-	Plots.plot(hmap1, hmap2, hmap3, layout=(3,1))
+	function plot_emap(emap::AbstractArray; legend = true, clim=(0,maximum(emap)))
+		
+		start = 0
+		ncol, nrow = size(emap)
+		emap = emap'
+
+		p = Plots.heatmap(
+			start:(ncol+start-1), 
+			0:(nrow-1), 
+			emap, 
+			c = :matter, 
+			background_color = :black,
+			legend = legend,
+			clim = clim
+		)
+
+		Plots.plot!(p, xlims = (start-0.5, ncol+start-0.5), 
+			ylims = (-0.5, nrow-0.5), yticks = 0:nrow)
+		# plot horizontal lines
+		for j in 0:(nrow-1)
+			Plots.plot!(p, (start-0.5):(ncol+start-0.5), (j-0.5)*ones(ncol+1), 
+				color = :black, legend = false)
+		end
+
+		# plot vertical lines
+		for j in 1:(nrow-1)
+			for jj in 1:2^(j-1)
+				vpos = (ncol/2^j)*(2*jj-1)+start-0.5;
+				Plots.plot!(p, vpos*ones(nrow-j+1), j-0.5:nrow-0.5, color = :black)
+			end
+		end
+		Plots.plot!(p, (ncol+start-0.5)*ones(nrow+1), -0.5:nrow-0.5, color = :black)
+		Plots.plot!(p, (start-0.5)*ones(nrow+1), -0.5:nrow-0.5, color = :black)
+		Plots.plot!(p, yaxis = :flip)
+
+		return p
+	end
+	if autorun
+		gr(size=(700,600))
+		hmap1 = plot_emap(ldb₀.Γ[:,:,1], clim = (0,0.6))
+		Plots.plot!(ylabel = "Class 1")
+		hmap2 = plot_emap(ldb₀.Γ[:,:,2], clim = (0,0.6))
+		Plots.plot!(ylabel = "Class 2")
+		hmap3 = plot_emap(ldb₀.Γ[:,:,3], clim = (0,0.6))
+		Plots.plot!(ylabel = "Class 3")
+		Plots.plot(hmap1, hmap2, hmap3, layout=(3,1))
+	end
 end
 
+# ╔═╡ 82ffc65d-54ea-42ae-a7ef-dbe6216b0d1e
+md"We can also visualize the discriminant measure map and the selected nodes/sub-bands using the `discriminant_measure` function and the `tree` attributes respectively. The first plot in the figure below displays the heatmap for the discriminant measure map and the second plot displays the selected nodes from the binary tree."
+
 # ╔═╡ 121fd299-5e82-4159-8472-5d385c736c18
-Plots.heatmap(discriminant_measure(ldb₀.Γ, dm[d_measure])',yflip=true)
+begin
+	if autorun
+		gr(size=(700,400))
+		dmap = plot_emap(
+			discriminant_measure(ldb₀.Γ, dm[d_measure]);
+			legend = true
+		)
+		tmap = plot_tfbdry(ldb₀.tree)
+		Plots.plot(dmap, tmap, layout=(2,1))
+	end
+end
 
 # ╔═╡ 96a49a0c-4646-43f9-98c2-09ac484f6df8
-md"## Signal Classification"
+md"## III. Signal Classification Experiment"
 
 # ╔═╡ 406e7ffe-fa01-4622-ae09-aca5473bfe6c
-md"Now we will attempt to classify the 3 classes of signals using LDB. Let us generate 100 training samples and 1000 test samples."
+md"In this section, we will evaluate the classification capabilities of LDB via a simulation experiment. We will generate 3 classes of signals, use LDB to extract the most discriminant features, and classify the signals using various ML methods."
+
+# ╔═╡ a5126ad3-19b1-4b4e-b96f-ef6b5220854b
+md"**Select** dataset"
+
+# ╔═╡ f9a60263-7ebd-4df8-b33f-5f0e85719186
+@bind sigtype2 Radio(["Cylinder-Bell-Funnel","Triangular"], default = "Cylinder-Bell-Funnel")
+
+# ╔═╡ 2999257a-03bf-4313-8dd6-d2da0ed2ef9c
+md"""**Select** the type of wavelet to use
+
+$(@bind wavelet_type Select(
+	["WT.haar", 
+	"WT.db1", "WT.db2", "WT.db3", "WT.db4", "WT.db5", 
+	"WT.db6", "WT.db7", "WT.db8", "WT.db9", "WT.db10",
+	"WT.coif2", "WT.coif4", "WT.coif6", "WT.coif8",
+	"WT.sym4", "WT.sym5", "WT.sym6", "WT.sym7", "WT.sym8", "WT.sym9", "WT.sym10",
+	"WT.batt2", "WT.batt4", "WT.batt6"],
+	default = "WT.coif6"
+))"""
+
+# ╔═╡ 65d45fbd-09bf-49e9-b027-e43751ce070f
+md"**Select** the type of energy map"
+
+# ╔═╡ bf8314d6-eb38-4594-afb0-eed5f3151389
+@bind e_measure2 Radio(
+	[
+		"Time Frequency",
+		"Probability Density",
+	],
+	default = "Time Frequency"
+)
+
+# ╔═╡ dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
+md"**Select** the type of discriminant measure"
+
+# ╔═╡ 1b71478b-a386-416b-97dc-a2e5da1ce071
+@bind d_measure2 Radio(
+	[
+		"Asymmetric Relative Entropy",
+		"Symmetric Relative Entropy",
+		"Lp Entropy",
+		"Hellinger Distance"
+	],
+	default = "Asymmetric Relative Entropy"
+)
+
+# ╔═╡ 60cffbcf-d539-4038-9a12-c40fa41d6880
+md"**Auto Run**: Check the box after you are satisfied with the experiment parameters
+
+$(@bind autorun2 CheckBox())"
 
 # ╔═╡ 7a9548a4-c528-41af-bba7-a99b0c91247b
 begin
-	machines = Dict() # Models
-	X = (train=Dict(), test=Dict())
-	y = (train=Dict(), test=Dict())
-	df = DataFrame(Type = String[], trainerr = Float64[], testerr = Float64[])
+	if autorun2
+		machines = Dict() # Models
+		X = (train=Dict(), test=Dict())
+		y = (train=Dict(), test=Dict())
+		df = DataFrame(Type = String[], trainerr = Float64[], testerr = Float64[])
+	end
 end;
 
 # ╔═╡ 4774bfcf-9e50-428c-b51f-76a887031862
 begin
-	X_train, y_train = generateclassdata(ClassData(st[sigtype],33,33,33), true)
-	X_test, y_test = generateclassdata(ClassData(st[sigtype],333,333,333), true)
-	
-	X.train["STD"], X.test["STD"] = X_train', X_test'
-	y.train["STD"], y.test["STD"] = coerce(y_train, Multiclass), coerce(y_test, Multiclass)
-end;
+	if autorun2
+		X_train, y_train = generateclassdata(ClassData(st[sigtype2],33,33,33), true)
+		X_test, y_test = generateclassdata(ClassData(st[sigtype2],333,333,333), true)
+
+		X.train["STD"], X.test["STD"] = X_train', X_test'
+		y.train["STD"], y.test["STD"] = coerce(y_train, Multiclass), coerce(y_test, Multiclass)
+	end
+end
 
 # ╔═╡ 2d398c73-37bc-44d4-8559-e220de94624d
-md"Next, we will load some machine learning models from `MLJ.jl`. We will include two very basic decision tree models(with and without pruning), Linear Discriminant classifier (LDA), Multinomial classifier with L1 regularization (i.e., LASSO), and finally a Random Forest classifier" 
+md"Next, we will load some machine learning models from `MLJ.jl`. We will include two very basic decision tree models(with and without pruning), Linear Discriminant classifier (LDA), Multinomial classifier with L1 regularization (i.e., LASSO), and finally a Random Forest classifier." 
 
 # ╔═╡ 7a7cae84-3272-4303-80fa-d56a8615b9ff
 begin
@@ -323,11 +446,13 @@ md"Intialize the ML models"
 
 # ╔═╡ 0707059e-9f04-42b7-9b6b-a1de72b24a5f
 begin
-	machines["FCT"] = Tree()
-	machines["PCT"] = Tree(post_prune=true, merge_purity_threshold=0.8)
-	machines["LDA"] = LDA()
-	machines["MCLogit"] = MCLogit(penalty=:l1, lambda=0.01)
-	machines["RForest"] = RForest()
+	if autorun2
+		machines["FCT"] = Tree()
+		machines["PCT"] = Tree(post_prune=true, merge_purity_threshold=0.8)
+		machines["LDA"] = LDA()
+		machines["MCLogit"] = MCLogit(penalty=:l1, lambda=0.01)
+		machines["RForest"] = RForest()
+	end
 end;
 
 # ╔═╡ 51d745c9-8c1a-41ef-8ee6-c5e9c35d39fe
@@ -358,12 +483,18 @@ function evaluate_model(model::String, dat::String, X, y)
 end
 
 # ╔═╡ 19e7d3f3-970d-4d05-9664-8fe23009fb71
-for machine in ["FCT", "PCT", "LDA", "MCLogit", "RForest"]
-	evaluate_model(machine, "STD", X, y)
+begin
+	if autorun2
+		for machine in ["FCT", "PCT", "LDA", "MCLogit", "RForest"]
+			evaluate_model(machine, "STD", X, y)
+		end
+	end
 end
 
 # ╔═╡ 4ffbeab9-67c5-46a0-8e09-449d91dfa34c
-df
+if autorun2
+	df
+end
 
 # ╔═╡ 97516db4-c019-49a7-b826-64294fd14220
 md"### Using LDB-5"
@@ -373,22 +504,30 @@ md"Next, we significantly reduce the dimensionality of the models by only using 
 
 # ╔═╡ a828877d-1f49-4b76-b397-869bb11e40c5
 begin
-	ldb = LocalDiscriminantBasis(wt = wavelet(WT.coif6),
-								 dm = dm[d_measure],
-								 en = em[e_measure],
-	                             n_features = 10)
-	WaveletsExt.fit!(ldb, X_train, y_train)
-	X.train["LDB5"] = WaveletsExt.transform(ldb, X_train)';
-	X.test["LDB5"] = WaveletsExt.transform(ldb, X_test)';
+	if autorun2
+		ldb = LocalDiscriminantBasis(wt = wavelet(eval(Meta.parse(wavelet_type))),
+									 dm = dm[d_measure],
+									 en = em[e_measure],
+									 n_features = 5)
+		WaveletsExt.fit!(ldb, X_train, y_train)
+		X.train["LDB5"] = WaveletsExt.transform(ldb, X_train)';
+		X.test["LDB5"] = WaveletsExt.transform(ldb, X_test)';
+	end
 end;
 
 # ╔═╡ 34ff82ef-e7a7-4df2-ab71-3280a5ef34fe
-for machine in ["FCT", "PCT", "LDA", "MCLogit", "RForest"]
-	evaluate_model(machine, "LDB5", X, y)
+begin
+	if autorun2
+		for machine in ["FCT", "PCT", "LDA", "MCLogit", "RForest"]
+			evaluate_model(machine, "LDB5", X, y)
+		end
+	end
 end
 
 # ╔═╡ 407cce96-73cb-4baf-90f9-b46d5d617018
-df
+if autorun2
+	df
+end
 
 # ╔═╡ 7dd079af-0445-436c-9bd3-9550cfaa9b19
 md"### 3. Using all LDB features"
@@ -397,46 +536,70 @@ md"### 3. Using all LDB features"
 md"Finally, we use all the LDB features to train our models. Note that we do not include the LDA model because theoretically it is the same with using the euclidean coordinates."
 
 # ╔═╡ a08dd1ea-a403-41b4-915c-56fde82222e7
-ldb₁ = LocalDiscriminantBasis(
-	wt = wavelet(WT.coif6),
-	dm = dm[d_measure],
-	en = em[e_measure]
-)
+if autorun2
+	ldb₁ = LocalDiscriminantBasis(
+		wt = wavelet(eval(Meta.parse(wavelet_type))),
+		dm = dm[d_measure2],
+		en = em[e_measure2]
+	)
+end
 
 # ╔═╡ 3a374ac2-e225-4637-9dbd-6644cb80b629
-WaveletsExt.fit!(ldb₁, X_train, y_train)
-
-# ╔═╡ d51bddaa-d44c-4b97-acde-483939a6d7f8
 begin
-	X.train["LDB"] = WaveletsExt.transform(ldb₁, X_train)'
-	X.test["LDB"] = WaveletsExt.transform(ldb₁, X_test)'
-end;
-
-# ╔═╡ 3a524156-593f-4a01-91f2-af58e2d75e13
-for machine in ["FCT", "PCT", "MCLogit", "RForest"]
-	evaluate_model(machine, "LDB", X, y)
+	if autorun2
+		WaveletsExt.fit!(ldb₁, X_train, y_train)
+		X.train["LDB"] = WaveletsExt.transform(ldb₁, X_train)'
+		X.test["LDB"] = WaveletsExt.transform(ldb₁, X_test)'
+		for machine in ["FCT", "PCT", "MCLogit", "RForest"]
+			evaluate_model(machine, "LDB", X, y)
+		end
+	end
 end
 
 # ╔═╡ 3f3d4bcf-3f2b-4140-ba52-2246c5140303
-df
+if autorun2
+	df
+end
 
 # ╔═╡ 9b292713-1580-48ae-b9cc-05dca097a673
 md"## Results"
 
 # ╔═╡ c1b823e9-4a80-4cca-9527-5b0f2933933d
-Gadfly.plot(
-	sort(df, :testerr, rev=true),
-	layer(x=:testerr, y=:Type, Geom.point, color=[colorant"red"]),
-	layer(x=:trainerr, y=:Type, Geom.point, color=[colorant"blue"]),
-	Guide.title("Model Performance"),
-	Guide.xlabel("Log Loss (Categorical Cross Entropy)"),
-	Guide.manual_color_key("",["Train Error","Test Error"], [Gadfly.current_theme().default_color,"red"]))
-
-# ╔═╡ 35c8290b-0c34-49c0-bbef-d1b0e781ee02
-md"The plot above shows the performance of each model in terms of Log Loss (a.k.a. Categorical Cross Entropy). The most notable result is that the Multinomial Logit, LDA, and Random Forest models using LDB-5 are performing very well. This demonstrates how LDB can significantly reduce model dimensionality while maitining classification accuracy.\
-\
-In our experiment, basic decision trees perform terribly. This could be because of overfitting or that they are not suited for modeling this particular data.
-"  
+begin
+	if autorun2
+		set_default_plot_size(18cm, 16cm)
+		Gadfly.plot(
+			sort(df, :testerr, rev=true),
+			layer(
+				x=:testerr, y=:Type, 
+				Geom.point, 
+				color=[colorant"#de425b"],
+				size = [1.5mm],
+				alpha = [0.7]
+			),
+			layer(
+				x=:trainerr, y=:Type, 
+				Geom.point, 
+				color=[colorant"#488f31"],
+				size = [1.5mm],
+				alpha = [0.7]
+			),
+			layer(
+				xintercept = [-3*log(1/3)],
+				Geom.vline(color = "gray", size = [1mm])
+			),
+			Guide.title("Model Performance"),
+			Guide.xlabel("Log Loss (Categorical Cross Entropy)"),
+			Guide.manual_color_key(
+				"",
+				["Test Error","Train Error", "Baseline"], 
+				[colorant"#de425b", colorant"#488f31", "gray"],
+				size = [1.5mm],
+				shape = [Gadfly.Shape.circle, Gadfly.Shape.circle, Gadfly.Shape.square]
+			)
+		)
+	end
+end
 
 # ╔═╡ Cell order:
 # ╟─45f88030-a821-11eb-0c6d-f5c7c82b7115
@@ -445,6 +608,7 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─f3a892ef-0c5a-4d4a-86ab-036d913d9d97
 # ╟─c195f5d9-2538-4278-9d27-c14446e7cb65
 # ╟─a751cd87-80c5-48b1-b798-f1aecebc08a1
+# ╟─4e5fe030-8a87-4f4a-88a4-b7b824157880
 # ╟─b8077eb3-ec64-4a84-9dcc-3aafce015597
 # ╟─e8182e69-8776-4ab5-a38e-bf2175ceb0ea
 # ╟─910d24a0-8c00-42c5-8e11-13da2557a09d
@@ -483,20 +647,29 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─7dc1ba75-fa54-4d59-9b54-93e01da7211e
 # ╟─86df0e34-8f77-4d6e-8f40-6f4d8e706c15
 # ╟─ad3fe2dc-8003-451c-bf83-c3c7f24e7f0b
+# ╟─f0c4b67e-208e-41a4-9510-c47e04a65e20
 # ╟─9c4cf3a1-cd6a-4a42-acce-ceaca6c66df2
+# ╟─299c91a6-c315-4299-97fc-57a6b6f419b5
 # ╟─df7c5ef9-73ff-44b7-aacb-d5fa132d7c2b
 # ╟─f1c6268b-a6d5-445a-9e52-748898ec08da
 # ╟─9e523918-daaf-4c17-851a-7fac12b04cd3
+# ╟─22a8dfdb-c046-4614-8e2b-aab22d12b205
+# ╟─09bc8c83-2f25-44a0-81ab-9f0a5724673f
 # ╠═2c9b5aef-ba63-44b6-8ef9-ca31cc682fad
-# ╟─2a9efa07-447e-46d8-b0a6-8560a6765a1f
-# ╠═d55eb3ed-cf38-4f51-8245-fdb427312eb8
-# ╟─0e4f9614-6972-4993-9d65-f4cf515553bd
-# ╠═6d968714-1058-4771-8964-20621ca9ffc6
-# ╟─3ece6ff2-adaf-476b-bd01-dbd48dc00f15
+# ╟─ae624404-0770-41e9-962b-139006356ea6
 # ╟─f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
-# ╠═121fd299-5e82-4159-8472-5d385c736c18
+# ╟─82ffc65d-54ea-42ae-a7ef-dbe6216b0d1e
+# ╟─121fd299-5e82-4159-8472-5d385c736c18
 # ╟─96a49a0c-4646-43f9-98c2-09ac484f6df8
 # ╟─406e7ffe-fa01-4622-ae09-aca5473bfe6c
+# ╟─a5126ad3-19b1-4b4e-b96f-ef6b5220854b
+# ╟─f9a60263-7ebd-4df8-b33f-5f0e85719186
+# ╟─2999257a-03bf-4313-8dd6-d2da0ed2ef9c
+# ╟─65d45fbd-09bf-49e9-b027-e43751ce070f
+# ╟─bf8314d6-eb38-4594-afb0-eed5f3151389
+# ╟─dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
+# ╟─1b71478b-a386-416b-97dc-a2e5da1ce071
+# ╟─60cffbcf-d539-4038-9a12-c40fa41d6880
 # ╠═7a9548a4-c528-41af-bba7-a99b0c91247b
 # ╠═4774bfcf-9e50-428c-b51f-76a887031862
 # ╟─2d398c73-37bc-44d4-8559-e220de94624d
@@ -512,14 +685,11 @@ In our experiment, basic decision trees perform terribly. This could be because 
 # ╟─c47d64f3-12fc-4628-9162-21980066bd00
 # ╠═a828877d-1f49-4b76-b397-869bb11e40c5
 # ╠═34ff82ef-e7a7-4df2-ab71-3280a5ef34fe
-# ╟─407cce96-73cb-4baf-90f9-b46d5d617018
+# ╠═407cce96-73cb-4baf-90f9-b46d5d617018
 # ╟─7dd079af-0445-436c-9bd3-9550cfaa9b19
 # ╟─b31e54a1-f1b7-44c4-b2bc-99123933c289
 # ╠═a08dd1ea-a403-41b4-915c-56fde82222e7
 # ╠═3a374ac2-e225-4637-9dbd-6644cb80b629
-# ╠═d51bddaa-d44c-4b97-acde-483939a6d7f8
-# ╠═3a524156-593f-4a01-91f2-af58e2d75e13
-# ╟─3f3d4bcf-3f2b-4140-ba52-2246c5140303
+# ╠═3f3d4bcf-3f2b-4140-ba52-2246c5140303
 # ╟─9b292713-1580-48ae-b9cc-05dca097a673
 # ╟─c1b823e9-4a80-4cca-9527-5b0f2933933d
-# ╟─35c8290b-0c34-49c0-bbef-d1b0e781ee02
