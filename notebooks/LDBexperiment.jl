@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.4
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -28,7 +28,7 @@ begin
 		Distributions, 
 		DataFrames,
 		Wavelets, WaveletsExt,
-		MLJ, 
+		MLJ,
 		Gadfly,
 		Plots,
 		PlutoUI
@@ -404,14 +404,21 @@ md"**Select** the type of discriminant measure"
 	default = "Asymmetric Relative Entropy"
 )
 
+# ╔═╡ 2bf768ee-7bc7-4039-85d2-dbdf9ed1f75a
+md"**Select** the numbers of features to extract"
+
+# ╔═╡ 6fef2648-058a-4136-8108-38c1624a19ca
+@bind dim2 Slider(1:length(X₀[:,1]), default=10, show_value=true)
+
 # ╔═╡ 60cffbcf-d539-4038-9a12-c40fa41d6880
-md"**Auto Run**: Check the box after you are satisfied with the experiment parameters
+md"**Auto Run**: Check the box after you are satisfied with the experiment parameters or when you want to re-run the experiment (uncheck and check again)
 
 $(@bind autorun2 CheckBox())"
 
 # ╔═╡ 7a9548a4-c528-41af-bba7-a99b0c91247b
 begin
 	if autorun2
+		dfm = DataFrame(name=String[], model=[], predtype=Symbol[])
 		machines = Dict() # Models
 		X = (train=Dict(), test=Dict())
 		y = (train=Dict(), test=Dict())
@@ -439,21 +446,32 @@ begin
 	LDA = @load LDA pkg=MultivariateStats
 	MCLogit = @load MultinomialClassifier pkg=MLJLinearModels
 	RForest = @load RandomForestClassifier pkg=ScikitLearn
+	SVC = @load SVMClassifier pkg=ScikitLearn
 end;
 
 # ╔═╡ 54fdabe6-85ff-4928-ac1c-1555d89ce456
 md"Intialize the ML models"
 
-# ╔═╡ 0707059e-9f04-42b7-9b6b-a1de72b24a5f
+# ╔═╡ 9ddb4726-5a78-4adf-a3eb-0796636467c1
 begin
-	if autorun2
-		machines["FCT"] = Tree()
-		machines["PCT"] = Tree(post_prune=true, merge_purity_threshold=0.8)
-		machines["LDA"] = LDA()
-		machines["MCLogit"] = MCLogit(penalty=:l1, lambda=0.01)
-		machines["RForest"] = RForest()
+	function add_model!(df::DataFrame, 
+						name::String, 
+						model, 
+						predtype=info(model).prediction_type)
+
+		M = Dict(:name=>name, :model=>model, :predtype=>predtype)
+		push!(df, M)
 	end
-end;
+
+	if autorun2
+		add_model!(dfm, "FCT", Tree())
+		add_model!(dfm, "PCT", Tree(post_prune=true, merge_purity_threshold=0.8))
+		add_model!(dfm, "LDA", LDA())
+		add_model!(dfm, "MCLogit", MCLogit(penalty=:l1, lambda=0.01))
+		add_model!(dfm, "Rforest", RForest())
+		add_model!(dfm, "SVC", SVC())
+	end
+end
 
 # ╔═╡ 51d745c9-8c1a-41ef-8ee6-c5e9c35d39fe
 md"### 1. Training models using the original signal"
@@ -462,22 +480,41 @@ md"### 1. Training models using the original signal"
 md"To evaluate the LDB algorithm's performance we first train the models using the original signals as input (i.e., Euclidean coordinates). To evaluate the training loss, we will perform a 5 fold cross validation."
 
 # ╔═╡ fded58ea-e7b1-4be1-b952-b7aa1358d5dd
-function evaluate_model(model::String, dat::String, X, y)
+function evaluate_model!(dfm::DataFrame, 
+						 df::DataFrame, 
+					     model::String, 
+						 dat::String, 
+						 X, y)
 	name = model * "-" * dat
 	
-	# Train error
-	evalres = evaluate(machines[model], 
-					   X.train[dat], y.train["STD"],
-					   resampling=CV(nfolds=5, shuffle=true),
-					   measure=cross_entropy)
-	trainerr = evalres.measurement[1]
+	# Training error
+	train, test = partition(eachindex(X.train[dat][:,1]), 0.7, shuffle=true)
+	M = first(dfm[dfm.name.==model,:model])
+	predtype = first(dfm[dfm.name.==model,:predtype])
 	
-	mach = machine(machines[model], X.train[dat], y.train["STD"])
+	mach₀ = machine(M, 
+					X.train[dat][train,:], 
+					y.train["STD"][train])
+	MLJ.fit!(mach₀)
+	if predtype == :deterministic
+		ŷ₀ = predict(mach₀, X.train[dat][test,:])
+	else
+		ŷ₀ = predict_mode(mach₀, X.train[dat][test,:])
+	end
+		
+	trainerr = Accuracy()(ŷ₀, y.train["STD"][test])
+	
+	mach = machine(M, X.train[dat], y.train["STD"])
 	MLJ.fit!(mach)
 	
 	# Test error
-	ŷ₁ = predict(mach, X.test[dat])
-	testerr = LogLoss()(ŷ₁, y.test["STD"]) |> mean
+	if predtype == :deterministic
+		ŷ = predict(mach, X.test[dat])
+	else
+		ŷ = predict_mode(mach, X.test[dat])
+	end
+	
+	testerr = Accuracy()(ŷ, y.test["STD"])
 	
 	push!(df, Dict(:Type=>name, :trainerr=>trainerr, :testerr=>testerr))
 end
@@ -485,8 +522,8 @@ end
 # ╔═╡ 19e7d3f3-970d-4d05-9664-8fe23009fb71
 begin
 	if autorun2
-		for machine in ["FCT", "PCT", "LDA", "MCLogit", "RForest"]
-			evaluate_model(machine, "STD", X, y)
+		for name in dfm.name
+			evaluate_model!(dfm, df, name, "STD", X, y)
 		end
 	end
 end
@@ -497,29 +534,31 @@ if autorun2
 end
 
 # ╔═╡ 97516db4-c019-49a7-b826-64294fd14220
-md"### Using LDB-5"
+md"### Using LDB-k"
 
 # ╔═╡ c47d64f3-12fc-4628-9162-21980066bd00
-md"Next, we significantly reduce the dimensionality of the models by only using the top 5 most discriminant features obtained from LDB."
+md"Next, we significantly reduce the dimensionality of the models by only using the top k most discriminant features obtained from LDB."
 
 # ╔═╡ a828877d-1f49-4b76-b397-869bb11e40c5
 begin
 	if autorun2
+		ldbk = "LDB-" * string(dim2)
+		
 		ldb = LocalDiscriminantBasis(wt = wavelet(eval(Meta.parse(wavelet_type))),
 									 dm = dm[d_measure],
 									 en = em[e_measure],
-									 n_features = 5)
+									 n_features = 10)
 		WaveletsExt.fit!(ldb, X_train, y_train)
-		X.train["LDB5"] = WaveletsExt.transform(ldb, X_train)';
-		X.test["LDB5"] = WaveletsExt.transform(ldb, X_test)';
+		X.train[ldbk] = WaveletsExt.transform(ldb, X_train)';
+		X.test[ldbk] = WaveletsExt.transform(ldb, X_test)';
 	end
 end;
 
 # ╔═╡ 34ff82ef-e7a7-4df2-ab71-3280a5ef34fe
 begin
 	if autorun2
-		for machine in ["FCT", "PCT", "LDA", "MCLogit", "RForest"]
-			evaluate_model(machine, "LDB5", X, y)
+		for name in dfm.name
+			evaluate_model!(dfm, df, name, ldbk, X, y)
 		end
 	end
 end
@@ -550,8 +589,8 @@ begin
 		WaveletsExt.fit!(ldb₁, X_train, y_train)
 		X.train["LDB"] = WaveletsExt.transform(ldb₁, X_train)'
 		X.test["LDB"] = WaveletsExt.transform(ldb₁, X_test)'
-		for machine in ["FCT", "PCT", "MCLogit", "RForest"]
-			evaluate_model(machine, "LDB", X, y)
+		for machine in dfm.name
+			evaluate_model!(dfm, df, machine, "LDB", X, y)
 		end
 	end
 end
@@ -569,7 +608,7 @@ begin
 	if autorun2
 		set_default_plot_size(18cm, 16cm)
 		Gadfly.plot(
-			sort(df, :testerr, rev=true),
+			sort(df, :testerr),
 			layer(
 				x=:testerr, y=:Type, 
 				Geom.point, 
@@ -585,11 +624,11 @@ begin
 				alpha = [0.7]
 			),
 			layer(
-				xintercept = [-3*log(1/3)],
+				xintercept = [1/3],
 				Geom.vline(color = "gray", size = [1mm])
 			),
 			Guide.title("Model Performance"),
-			Guide.xlabel("Log Loss (Categorical Cross Entropy)"),
+			Guide.xlabel("Accuracy"),
 			Guide.manual_color_key(
 				"",
 				["Test Error","Train Error", "Baseline"], 
@@ -667,15 +706,17 @@ end
 # ╟─2999257a-03bf-4313-8dd6-d2da0ed2ef9c
 # ╟─65d45fbd-09bf-49e9-b027-e43751ce070f
 # ╟─bf8314d6-eb38-4594-afb0-eed5f3151389
-# ╟─dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
+# ╠═dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
 # ╟─1b71478b-a386-416b-97dc-a2e5da1ce071
+# ╟─2bf768ee-7bc7-4039-85d2-dbdf9ed1f75a
+# ╟─6fef2648-058a-4136-8108-38c1624a19ca
 # ╟─60cffbcf-d539-4038-9a12-c40fa41d6880
 # ╠═7a9548a4-c528-41af-bba7-a99b0c91247b
 # ╠═4774bfcf-9e50-428c-b51f-76a887031862
 # ╟─2d398c73-37bc-44d4-8559-e220de94624d
 # ╠═7a7cae84-3272-4303-80fa-d56a8615b9ff
 # ╟─54fdabe6-85ff-4928-ac1c-1555d89ce456
-# ╠═0707059e-9f04-42b7-9b6b-a1de72b24a5f
+# ╠═9ddb4726-5a78-4adf-a3eb-0796636467c1
 # ╟─51d745c9-8c1a-41ef-8ee6-c5e9c35d39fe
 # ╟─b0e3e833-47d6-493e-bb51-940267e6f85d
 # ╠═fded58ea-e7b1-4be1-b952-b7aa1358d5dd
@@ -692,4 +733,4 @@ end
 # ╠═3a374ac2-e225-4637-9dbd-6644cb80b629
 # ╠═3f3d4bcf-3f2b-4140-ba52-2246c5140303
 # ╟─9b292713-1580-48ae-b9cc-05dca097a673
-# ╟─c1b823e9-4a80-4cca-9527-5b0f2933933d
+# ╠═c1b823e9-4a80-4cca-9527-5b0f2933933d
