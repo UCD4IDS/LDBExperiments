@@ -36,26 +36,42 @@ end
 
 # ╔═╡ 45f88030-a821-11eb-0c6d-f5c7c82b7115
 md"# Local Discriminant Basis  
-**Author**: Shozen Dan"
+**Authors**: Shozen Dan, Zeng Fung Liew, Naoki Saito"
 
 # ╔═╡ f3a892ef-0c5a-4d4a-86ab-036d913d9d97
-md"## I. A Brief History"
+md"## I. Introduction"
 
 # ╔═╡ c195f5d9-2538-4278-9d27-c14446e7cb65
-md"**Local Discriminant Basis (LDB)** is a wavelet based feature extraction method concieved by [Naoki Saito](https://www.math.ucdavis.edu/~saito) in Fall 1993. Earlier in 1992, [Victor Wickerhauser](https://www.math.wustl.edu/~victor/) had generalized the best basis algorithm such that it worked not only for a single signal, but for a collection of signals that share the same important features. The so called Joint Best Basis (JBB) can be viewed as a time-frequency localized version of the Principle Component Analysis (PCA) or the Karhunen-Loève Basis (KLB).\
+md"**Local Discriminant Basis (LDB)** is a wavelet based feature extraction method concieved by [Naoki Saito](https://www.math.ucdavis.edu/~saito). In 1992, [Victor Wickerhauser](https://www.math.wustl.edu/~victor/) had generalized the wavelet best basis algorithm such that it worked not only for a single signal, but for a collection of signals that share the same features. This so called Joint Best Basis (JBB) can be viewed as a time-frequency localized version of the Principle Component Analysis (PCA) or the Karhunen-Loève Basis (KLB).\
 \
-While JBB is good for signals belonging to the same class (i.e., share the same features), it does not work for signal classifications in general. LDB sets out to solve this issue by replacing the original minimum entropy cost function used in the JBB with the Kullback-Leibler divergence (a.k.a. relative entropy). More specifically,
+While JBB is good for signals belonging to the same class, it does not work for signal classifications in general. LDB sets out to solve this issue by replacing the original minimum entropy cost function used in the JBB with discriminant measures such as Kullback-Leibler divergence. In a nutshell, the LDB takes to following steps to extract discriminant features from a set of signals.
 
-1. Decomposes individual signals into time-frequency dictionaries. 
+1. Decomposes individual signals into time-frequency dictionaries (wavelet packet decomposition). 
 2. Creates a time-frequency energy distribution for each class by accumulating these dictionaries.
-3. A complete orthonormal basis called LDB, which encodes the time-frequency localized similarity and differences between signal classes, is computed using distance measures such as KL-divergence or the Hellinger distance.
+3. A complete orthonormal basis called LDB, which encodes the time-frequency localized similarity and differences between signal classes, is computed using discriminant measures such as KL-divergence.
 4. The coordinates that house the most distinguishing (the most divergent) feature of each signal class is identified.
-5. The features at these coordinates are extracted from the time-frequency dictionaries of each individual signal and fed to classification algorithms such as Decision Trees (CART) of Linear Discriminant Analysis (LDA).\
+5. The features at these coordinates are extracted from the time-frequency dictionaries of each individual signal and fed to classification algorithms such as Decision Trees or Linear Discriminant Analysis.\
 
-For more on LDB, please visit the following resources:
-* [Local Discriminant Basis](https://www.math.ucdavis.edu/~saito/contrib/#ldb)
-* [On Local Orthonormal Bases for Classification and Regression](http://math.ucdavis.edu/~saito/publications/saito_icassp95.pdf)
-* [Local discriminant bases and their applications](http://math.ucdavis.edu/~saito/publications/saito_ldb_jmiv.pdf)
+Some resourses on LDB including the original paper can be found in the following links:
+* [Local Discriminant Basis[1]](https://www.math.ucdavis.edu/~saito/contrib/#ldb)
+* [On Local Orthonormal Bases for Classification and Regression[2]](http://math.ucdavis.edu/~saito/publications/saito_icassp95.pdf)
+* [Local discriminant bases and their applications[3]](http://math.ucdavis.edu/~saito/publications/saito_ldb_jmiv.pdf)
+
+The application capabilities of LDB has been studied in multiple studies, with a large number belonging to the bio-medical and neuroscience fields. Results have shown that LDB can successfully classify tumors (e.g. breast and brain), fungal infections, and brain waves using signals obtained from medical sensing techniques such as MRI and EEG[4][5][6].
+
+**References**
+
+[1]N. Saito and R. R. Coifman, “On local orthonormal bases for classification and regression,” in 1995 International Conference on Acoustics, Speech, and Signal Processing, May 1995, vol. 3, pp. 1529–1532 vol.3. doi: 10.1109/ICASSP.1995.479852.
+
+[2]N. Saito, “Naoki’s Selected Scientific Contributions,” Naoki’s Selected Scientific Contributions. https://www.math.ucdavis.edu/~saito/contrib/#ldb
+
+[3]N. Saito and R. R. Coifman, “Local discriminant bases and their applications,” J Math Imaging Vis, vol. 5, no. 4, pp. 337–358, Dec. 1995, doi: 10.1007/BF01250288.
+
+[4]D. Li, W. Pedrycz, and N. J. Pizzi, “Fuzzy wavelet packet based feature extraction method and its application to biomedical signal classification,” IEEE Transactions on Biomedical Engineering, vol. 52, no. 6, pp. 1132–1139, Jun. 2005, doi: 10.1109/TBME.2005.848377.
+
+[5]N. F. Ince, S. Arica, and A. Tewfik, “Classification of single trial motor imagery EEG recordings with subject adapted non-dyadic arbitrary time–frequency tilings,” J. Neural Eng., vol. 3, no. 3, pp. 235–244, Sep. 2006, doi: 10.1088/1741-2560/3/3/006.
+
+[6]S. K. Davis, B. D. Van Veen, S. C. Hagness, and F. Kelcz, “Breast Tumor Characterization Based on Ultrawideband Microwave Backscatter,” IEEE Transactions on Biomedical Engineering, vol. 55, no. 1, pp. 237–246, Jan. 2008, doi: 10.1109/TBME.2007.900564.
 "
 
 # ╔═╡ a751cd87-80c5-48b1-b798-f1aecebc08a1
@@ -706,7 +722,7 @@ end
 # ╟─2999257a-03bf-4313-8dd6-d2da0ed2ef9c
 # ╟─65d45fbd-09bf-49e9-b027-e43751ce070f
 # ╟─bf8314d6-eb38-4594-afb0-eed5f3151389
-# ╠═dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
+# ╟─dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
 # ╟─1b71478b-a386-416b-97dc-a2e5da1ce071
 # ╟─2bf768ee-7bc7-4039-85d2-dbdf9ed1f75a
 # ╟─6fef2648-058a-4136-8108-38c1624a19ca
