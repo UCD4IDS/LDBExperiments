@@ -24,7 +24,7 @@ julia> pwd()
 
 # change to the directory containing all the files from this repository. Eg:
 # Windowns
-julia> cd("C:/Users/USER/Documents/WaveletsDenoisingExperiment")
+julia> cd("C:/Users/USER/Documents/LDBExperiments")
 
 # Linux, Mac
 julia> cd("~/Documents/LDBExperiments")
@@ -62,6 +62,6 @@ julia> using Pkg; Pkg.add("Pluto")
 julia> import Pluto; Pluto.run()
 ```
 4. Pluto should open up in the default browser. Copy-paste the following URL into the file path:  
-[https://github.com/ShozenD/LDBExperiments/blob/master/notebooks/LDBexperiment.jl](https://github.com/zengfung/ShozenD/blob/master/notebooks/LDBexperiment.jl)
+[https://github.com/ShozenD/LDBExperiments/blob/master/notebooks/LDBexperiment.jl](https://github.com/ShozenD/blob/master/notebooks/LDBexperiment.jl)
 
 **Note:** When opening the notebooks using this method, Julia automatically downloads the notebook into the `~/.julia/pluto_notebooks` folder in your local machine. You may want to delete them once you are done.
