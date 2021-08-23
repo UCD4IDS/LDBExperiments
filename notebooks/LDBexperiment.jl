@@ -170,9 +170,6 @@ $V_i^{(y)} \triangleq
 # ╔═╡ 8d2707f8-a982-4c83-b14a-1a2deb6743b4
 md"""$(Resource(em_img_url))"""
 
-# ╔═╡ d9973444-b859-4377-bcf0-2c6885933380
-pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-density-map.png";
-
 # ╔═╡ fb91da71-303f-4c43-be7b-e39df1429355
 md"**Probability density**
 
@@ -186,7 +183,11 @@ $q_i^{(y)}(z) \triangleq
 	p(\boldsymbol{x}|y)d\boldsymbol{x} \to \hat{q}_i^{(y)}(z)$"
 
 # ╔═╡ d27634a5-e703-4fa2-bc1a-d7297b2388a3
-md"""$(Resource(pem_img_url))"""
+begin
+	pem_img_url = "https://raw.githubusercontent.com/ShozenD/LDBExperiments/main/images/probability-density-tensor.png";
+	
+	md"""$(Resource(pem_img_url))"""
+end
 
 # ╔═╡ e0a525ed-35f0-48cc-8403-ddfe03871074
 md"**Select** the type of energy map to use"
@@ -461,8 +462,8 @@ begin
 	Tree = @load DecisionTreeClassifier pkg=DecisionTree
 	LDA = @load LDA pkg=MultivariateStats
 	MCLogit = @load MultinomialClassifier pkg=MLJLinearModels
-	RForest = @load RandomForestClassifier pkg=ScikitLearn
-	SVC = @load SVMClassifier pkg=ScikitLearn
+	RForest = @load RandomForestClassifier pkg=DecisionTree
+	SVC = @load SVC pkg=LIBSVM
 end;
 
 # ╔═╡ 54fdabe6-85ff-4928-ac1c-1555d89ce456
@@ -683,7 +684,6 @@ end
 # ╟─a3b05137-0499-45c1-bbce-79784dbf59dc
 # ╟─55528ce0-3374-4d13-bb6f-61df9f854a39
 # ╟─8d2707f8-a982-4c83-b14a-1a2deb6743b4
-# ╟─d9973444-b859-4377-bcf0-2c6885933380
 # ╟─fb91da71-303f-4c43-be7b-e39df1429355
 # ╟─af1b235e-6fff-478f-a5c1-38fbc6c39b8f
 # ╟─d27634a5-e703-4fa2-bc1a-d7297b2388a3
