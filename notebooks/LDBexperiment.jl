@@ -207,7 +207,7 @@ em = Dict(["Time Frequency"=>TimeFrequency(), "Probability Density"=>Probability
 md"### Discriminant Measure"
 
 # ╔═╡ a0525192-f1d9-4173-960e-ea3c009e067b
-md"For each cell within the energy map, we can quatify the difference between each pair of classes by choosing an appropriate chosen discriminant measure. `WaveletsExt.jl` implements four different types of discriminant measures: asymmetic relative entropy, symmetric relative entropy, $L^P$ entropy, and Hellinger distance. The definition for each type of discriminant measure is shown below."
+md"For each cell within the energy map, we can quatify the difference between each pair of classes by choosing an appropriate chosen discriminant measure. `WaveletsExt.jl` implements four different types of discriminant measures: asymmetic relative entropy, symmetric relative entropy, squared euclidean distance, and Hellinger distance. The definition for each type of discriminant measure is shown below."
 
 # ╔═╡ e77667ca-9bb8-4f30-b5ba-ff107eb9a568
 md"Asymmetric Relative Entropy (Kullback-Leibler divergence):
@@ -221,9 +221,9 @@ $$D_S(p,q) = D_{KL}(p,q) + D_{KL}(q,p)$$
 "
 
 # ╔═╡ ed92e98f-e823-45a6-a401-342f584c333e
-md" $L^P$ entropy
+md"Squared Euclidean Distance
 
-$D_P(p,q) = \left(\int_{-\infty}^{\infty}(p(x)^P - q(x)^P)dx\right)^{1/P}$"
+$D_P(p,q) = \int_{-\infty}^{\infty}\left(p(x) - q(x)\right)^2dx$"
 
 # ╔═╡ 0b12ee12-9229-486f-aa65-1da5c53955cc
 md"Hellinger distance
@@ -238,7 +238,7 @@ md"**Select** the type of discriminant measure to use"
 	[
 		"Asymmetric Relative Entropy",
 		"Symmetric Relative Entropy",
-		"Lp Entropy",
+		"Squared Euclidean Distance",
 		"Hellinger Distance"
 	],
 	default = "Asymmetric Relative Entropy"
@@ -247,7 +247,7 @@ md"**Select** the type of discriminant measure to use"
 # ╔═╡ b27a4714-cbda-417e-85e1-26d7d98780ee
 dm = Dict([
 		"Asymmetric Relative Entropy" => AsymmetricRelativeEntropy(),
-		"Lp Entropy" => LpEntropy(),
+		"Squared Euclidean Distance" => LpEntropy(),
 		"Symmetric Relative Entropy" => SymmetricRelativeEntropy(),
 		"Hellinger Distance" => HellingerDistance()
 	]);
