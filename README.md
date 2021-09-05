@@ -1,4 +1,4 @@
-# LDBExperiments
+# Signal Classification using Local Discriminant Basis
 Tutorials and experiments using **Local Discriminant Basis (LDB)**.
 In this Pluto notebook we describe the algorithm behind LDB and test its classification capabilities by applying it on two standard signal classification datasets.
 
@@ -16,7 +16,7 @@ This note book is authored by Shozen Dan and Zeng Fung Liew under the supervisio
 ```shell
 git clone https://github.com/UCD4IDS/LDBExperiment.git
 ```
-2. Navigate to the WaveletsDenoisingExperiment directory and open up the Julia REPL.
+2. Navigate to the LDBExperiment directory and open up the Julia REPL.
 3. Ensure Julia is working on the current directory. This can be checked using the following commands:
 ```julia
 # shows the current working directory
