@@ -1,4 +1,4 @@
-# Signal Classification using Local Discriminant Basis
+# Feature Extraction for Signal Classification using Local Discriminant Basis
 Tutorials and experiments using **Local Discriminant Basis (LDB)**.
 In this Pluto notebook we describe the algorithm behind LDB and test its classification capabilities by applying it on two standard signal classification datasets.
 
