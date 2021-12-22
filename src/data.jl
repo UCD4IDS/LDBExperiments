@@ -7,6 +7,7 @@ import CodecZlib: GzipDecompressorStream
 import BufferedStreams: BufferedInputStream
 import FileIO: load
 import StatsBase: sample
+import WaveletsExt: ClassData, generateclassdata
 using MLDatasets
 
 include("textures_dict.jl")
@@ -113,8 +114,24 @@ function zero_padding(data::AbstractArray{T,3}, pad_widths::Integer = 2) where T
     return padded
 end
 
+function get_1d_dataset(type::Symbol, train_size::T, test_size::T) where T<:Integer
+    return get_1d_dataset(type, repeat([train_size], 3), repeat([test_size], 3))
+end
+
+function get_1d_dataset(type::Symbol,
+                         train_size::AbstractVector{T}, 
+                         test_size::AbstractVector{T}) where T<:Integer
+    @assert length(train_size) == length(test_size) == 3
+    train_x, train_y = generateclassdata(ClassData(type, train_size...))
+    test_x, test_y = generateclassdata(ClassData(type, test_size...))
+    return (train_x, train_y), (test_x, test_y)
+end
+
+get_tri_dataset(args...) = get_1d_dataset(:tri, args...)
+get_cbf_dataset(args...) = get_1d_dataset(:cbf, args...)
+
 function get_dataset(dataset::Symbol, args...)
-    @assert dataset ∈ [:mnist, :textures]
+    @assert dataset ∈ [:mnist, :textures, :tri, :cbf]
     return @eval $(Symbol("get_$(dataset)_dataset"))($args...)
 end
 
