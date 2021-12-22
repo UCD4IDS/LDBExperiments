@@ -25,3 +25,6 @@ docs/site/
 *.ai
 
 *.DS_Store
+
+# Datasets folder for 2D LDB
+data/
