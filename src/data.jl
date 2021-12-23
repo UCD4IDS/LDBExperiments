@@ -142,15 +142,26 @@ end
 Obtains the MNIST dataset.
 
 # Arguments
-- `dir::T where T<:AbstractString`: (Default: `"./data/textures/`) Directory to save
-  decompressed and extracted textures files.
+- `train_size::Union{S, AbstractVector{S}} where S<:Integer`: (Default: 10000) Train size.
+  If `train_size` is given as a scalar, then each class in MNIST will have at most
+  `train_size` number of data. Similarly, if `train_size` is a vector, then each entry is
+  the train size to the corresponding entry in 0,1,...,9.
+- `test_size::Union{S, AbstractVector{S}} where S<:Integer`: (Default: 10000) Test size. If
+  `test_size` is given as a scalar, then each class in MNIST will have at most `test_size`
+  number of data. Similarly, if `test_size` is a vector, then each entry is the test size to
+  the corresponding entry in 0,1,...,9.
 - `pad_widths::Integer`: (Default: `2`) Width of zero padding. Used to reshape the size of
   images into that of power of 2 for full wavelet decomposition capabilities.
+- `dir::T where T<:AbstractString`: (Default: `"./data/textures/`) Directory to save
+  decompressed and extracted textures files.
 
 # Returns
 Output in the form of `(train_x, train_y), (test_x, test_y)`
 """
-function get_mnist_dataset(dir::String = "./data/MNIST/", pad_widths::Integer = 2)
+function get_mnist_dataset(train_size::AbstractVector{T} = 10000, 
+                           test_size::AbstractVector{T} = 10000,
+                           pad_widths::T = 2, 
+                           dir::String = "./data/MNIST/") where T<:Integer
     # Downloads the MNIST dataset
     isdir(dir) || MNIST.download(dir, i_accept_the_terms_of_use = true)
     # Unpack the downloaded data into variables
@@ -159,7 +170,36 @@ function get_mnist_dataset(dir::String = "./data/MNIST/", pad_widths::Integer = 
     # Zero padding to make 28x28 images into 32x32 (using default settings)
     train_x = cat(train_x, dims = 3) |> x -> zero_padding(x, pad_widths)
     test_x = cat(test_x, dims = 3) |> x -> zero_padding(x, pad_widths)
+    # Subsample dataset
+    train_x, train_y = get_subsample(train_x, train_y, train_size)
+    test_x, test_y = get_subsample(test_x, test_y, test_size)
     return (train_x, train_y), (test_x, test_y)
+end
+
+function get_mnist_dataset(train_size::T = 10000, test_size::T = 10000, pad_widths::T = 2,
+                           dir::String = "./data/MNIST/") where T<:Integer
+    return get_mnist_dataset(repeat([train_size], 10), repeat([test_size], 10), pad_widths, dir)
+end
+
+# Subsamples the data from MNIST
+function get_subsample(X::AbstractArray{T}, y::AbstractVector{S}, size::Vector{R}) where 
+                      {T, S, R<:Integer}
+    # Allocate variable to store list of subsamples
+    Xsub = []
+    ysub = []
+    # Generate subsamples
+    classes = unique(y)
+    @assert length(size) == length(classes)
+    for (i,c) in enumerate(classes)
+        idx = findall(x -> (x==c), y)
+        nsubsamples = min(length(idx), size[i])
+        push!(Xsub, X[:,:,idx[1:nsubsamples]])
+        push!(ysub, y[idx[1:nsubsamples]])
+    end
+    # Concatenate the subsamples
+    Xsub = cat(Xsub..., dims = 3)
+    ysub = vcat(ysub...)
+    return Xsub, ysub
 end
 
 """
