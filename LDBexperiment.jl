@@ -38,7 +38,7 @@ end
 # ╔═╡ aa7ba1e0-ff23-4406-96a1-4406b4e94399
 begin
 	include("./src/data.jl")
-	using .LDBDatasets
+	import .LDBDatasets: get_dataset, textures_label
 end
 
 # ╔═╡ 45f88030-a821-11eb-0c6d-f5c7c82b7115
@@ -90,39 +90,66 @@ md"**Auto run:** Check the box to start the tutorial
 $(@bind autorun CheckBox())"
 
 # ╔═╡ b8077eb3-ec64-4a84-9dcc-3aafce015597
-md"We begin by obtaining some signals to classify. Using `ClassData()` alongside `generateclassdata()`, we can generate 2 different sets of signals (Cylinder-Bell-Funnel, Triangular waveform), each consisting of 3 classes of signals."
+md"We begin by obtaining some signals to classify. 
+
+For 1D signals, a wrapper function for `WaveletsExt.generateclassdata()` is written for easier signal generations. Here, we can generate 2 different sets of signals (Cylinder-Bell-Funnel, Triangular waveform), each consisting of 3 classes of signals.
+
+For 2D signals, one set of data is obtained from the [SIPI Image Database - Textures](https://sipi.usc.edu/database/database.php?volume=textures). Another set of data used in this experiment is the MNIST dataset, obtained from the MLDatasets.jl package."
 
 # ╔═╡ e8182e69-8776-4ab5-a38e-bf2175ceb0ea
 md"**Select** the dataset"
 
 # ╔═╡ 910d24a0-8c00-42c5-8e11-13da2557a09d
-@bind sigtype Radio(["Cylinder-Bell-Funnel","Triangular"], default = "Cylinder-Bell-Funnel")
+@bind sigtype Radio(["Cylinder-Bell-Funnel","Triangular", "Textures", "MNIST"], default = "Cylinder-Bell-Funnel")
 
 # ╔═╡ a0ae476e-7939-4bfe-83e4-9666d0ed366e
 md"""
-**Test**
+**Classes of textures for texture dataset**
 
-$(sigtype == "Triangular" || @bind test Radio(["1", "2", "3"], default = "1"))
+*Ignore the message below if the selected dataset is not Textures. Otherwise, hold `Ctrl` + `Click` on the texture files to generate samples from. Note that each file selected corresponds to a unique class.*
+
+$(sigtype != "Textures" || @bind textclass MultiSelect((sort ∘ collect ∘ keys)(LDBDatasets.textures_label), 
+	default = ["Brodatz - Grass (D9) - 512", 
+			   "Brodatz - Beach sand (D29) - 512",
+			   "Brodatz - Plastic bubbles (D112) - 512"]))
 """
 
 # ╔═╡ 705723ac-b0e0-4205-b3aa-8b516f9233d4
-st = Dict(["Triangular" => :tri, "Cylinder-Bell-Funnel" => :cbf]);
+st = Dict(["Triangular" => :tri, "Cylinder-Bell-Funnel" => :cbf,
+		   "Textures" => :textures, "MNIST" => :mnist]);
 
 # ╔═╡ dc92cbff-ccf1-4355-8d60-0e2f39dac6b0
 begin
-	X₀, y₀ = generateclassdata(ClassData(st[sigtype],10,10,10));
+	if sigtype ∈ ["Triangular", "Cylinder-Bell-Funnel"]
+		args = [5, 0]
+	elseif sigtype == "Textures"
+		args = [textclass, 1, 0]
+	else
+		args = [1, 0]
+	end
+	(X₀, y₀), _ = get_dataset(st[sigtype], args...)
 	Y₀ = coerce(y₀, Multiclass); # For compatibility with MLJ.jl
 end;
 
 # ╔═╡ 39f64d00-350d-43a6-bf57-06600aac2365
 begin
-	p1 = wiggle(X₀[:,1:5], sc=0.5)
-	Plots.plot!(xlab = "Class 1")
-	p2 = wiggle(X₀[:,11:15], sc=0.5)
-	Plots.plot!(xlab = "Class 2")
-	p3 = wiggle(X₀[:,21:25], sc=0.5)
-	Plots.plot!(xlab = "Class 3")
-	Plots.plot(p1, p2, p3, layout = (3,1))
+	if sigtype ∈ ["Triangular", "Cylinder-Bell-Funnel"]
+		p1 = wiggle(X₀[:,1:5], sc=0.5)
+		Plots.plot!(xlab = "Class 1")
+		p2 = wiggle(X₀[:,6:10], sc=0.5)
+		Plots.plot!(xlab = "Class 2")
+		p3 = wiggle(X₀[:,11:15], sc=0.5)
+		Plots.plot!(xlab = "Class 3")
+		Plots.plot(p1, p2, p3, layout = (3,1))
+	else
+		plts = []
+		for (x, y) in zip(eachslice(X₀, dims=3), y₀)
+			plt = heatmap(x', color = :greys, title = y, legend = false, yflip = true,
+						  titlefontsize = 7, tickfontsize=5)
+			push!(plts, plt)
+		end
+		Plots.plot(plts...)
+	end
 end
 
 # ╔═╡ 3c077b0c-ad81-43bf-af45-32d7f48185c7
@@ -289,7 +316,10 @@ md"After the pruning, we can sort the coefficients by their discriminant power a
 md"**Select** the number of features to extract"
 
 # ╔═╡ 9e523918-daaf-4c17-851a-7fac12b04cd3
-@bind dim Slider(1:length(X₀[:,1]), default=10, show_value=true)
+begin
+	sz = ndims(X₀) == 2 ? size(X₀,1) : size(X₀,1) * size(X₀,2)
+	@bind dim Slider(1:sz, default=10, show_value=true)
+end
 
 # ╔═╡ 22a8dfdb-c046-4614-8e2b-aab22d12b205
 md"To run the LDB algorithm using `WaveletsExt.jl`, we begin by calling `LocalDiscriminantBasis` constructor to specify the parameters. We need to pass 4 arguments to the constructor:
@@ -313,6 +343,10 @@ end
 
 # ╔═╡ ae624404-0770-41e9-962b-139006356ea6
 md"`WaveletsExt.jl` provides interfaces to understand the results of LDB. For example we can visualize the energy/probability density maps for each class by accessing the `Γ` attribute in the fitted LDB object. The plots below shows the energy/probability density maps for each class, where darker colors indicate that the sub-band has a higher discriminant power."
+
+# ╔═╡ bf1623dc-865d-4339-ae38-74457d7685c1
+md"
+### TODO: Figure out how to deal with following plot for 2D and ProbabilityDensity case"
 
 # ╔═╡ f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 begin
@@ -391,7 +425,19 @@ md"In this section, we will evaluate the classification capabilities of LDB via 
 md"**Select** dataset"
 
 # ╔═╡ f9a60263-7ebd-4df8-b33f-5f0e85719186
-@bind sigtype2 Radio(["Cylinder-Bell-Funnel","Triangular"], default = "Cylinder-Bell-Funnel")
+@bind sigtype2 Radio(["Cylinder-Bell-Funnel","Triangular", "Textures", "MNIST"], default = "Cylinder-Bell-Funnel")
+
+# ╔═╡ 8f8bb837-ed86-4a75-8254-913530ed8bc5
+md"""
+**Classes of textures for texture dataset**
+
+*Ignore the message below if the selected dataset is not Textures. Otherwise, hold `Ctrl` + `Click` on the texture files to generate samples from. Note that each file selected corresponds to a unique class.*
+
+$(sigtype2 != "Textures" || @bind textclass2 MultiSelect((sort ∘ collect ∘ keys)(LDBDatasets.textures_label), 
+	default = ["Brodatz - Grass (D9) - 512", 
+			   "Brodatz - Beach sand (D29) - 512",
+			   "Brodatz - Plastic bubbles (D112) - 512"]))
+"""
 
 # ╔═╡ 2999257a-03bf-4313-8dd6-d2da0ed2ef9c
 md"""**Select** the type of wavelet to use
@@ -450,17 +496,23 @@ begin
 		machines = Dict() # Models
 		X = (train=Dict(), test=Dict())
 		y = (train=Dict(), test=Dict())
-		df = DataFrame(Type = String[], trainerr = Float64[], testerr = Float64[])
+		df = DataFrame(Type = String[], TrainAcc = Float64[], TestAcc = Float64[])
 	end
 end;
 
 # ╔═╡ 4774bfcf-9e50-428c-b51f-76a887031862
 begin
 	if autorun2
-		X_train, y_train = generateclassdata(ClassData(st[sigtype2],33,33,33), true)
-		X_test, y_test = generateclassdata(ClassData(st[sigtype2],333,333,333), true)
+		if sigtype2 ∈ ["Triangular", "Cylinder-Bell-Funnel", "MNIST"]
+			args2 = [33, 333]
+		else
+			args2 = [textclass2, 33, 333]
+		end
+		(X_train, y_train), (X_test, y_test) = get_dataset(st[sigtype2], args2...)
 
-		X.train["STD"], X.test["STD"] = X_train', X_test'
+		nclass_train, nclass_test = (length∘unique)(y_train), (length∘unique)(y_test)
+		X.train["STD"]= reshape(X_train,:,33*nclass_train)'
+		X.test["STD"] = reshape(X_test,:,333*nclass_test)'
 		y.train["STD"], y.test["STD"] = coerce(y_train, Multiclass), coerce(y_test, Multiclass)
 	end
 end;
@@ -530,7 +582,7 @@ function evaluate_model!(dfm::DataFrame,
 		ŷ₀ = predict_mode(mach₀, X.train[dat][test,:])
 	end
 		
-	trainerr = Accuracy()(ŷ₀, y.train["STD"][test])
+	trainacc = Accuracy()(ŷ₀, y.train["STD"][test])
 	
 	mach = machine(M, X.train[dat], y.train["STD"])
 	MLJ.fit!(mach)
@@ -542,9 +594,9 @@ function evaluate_model!(dfm::DataFrame,
 		ŷ = predict_mode(mach, X.test[dat])
 	end
 	
-	testerr = Accuracy()(ŷ, y.test["STD"])
+	testacc = Accuracy()(ŷ, y.test["STD"])
 	
-	push!(df, Dict(:Type=>name, :trainerr=>trainerr, :testerr=>testerr))
+	push!(df, Dict(:Type=>name, :TrainAcc=>trainacc, :TestAcc=>testacc))
 end
 
 # ╔═╡ 19e7d3f3-970d-4d05-9664-8fe23009fb71
@@ -575,7 +627,7 @@ begin
 		ldb = LocalDiscriminantBasis(wt = wavelet(eval(Meta.parse(wavelet_type))),
 									 dm = dm[d_measure],
 									 en = em[e_measure],
-									 n_features = 10)
+									 n_features = dim2)
 		WaveletsExt.fit!(ldb, X_train, y_train)
 		X.train[ldbk] = WaveletsExt.transform(ldb, X_train)';
 		X.test[ldbk] = WaveletsExt.transform(ldb, X_test)';
@@ -625,7 +677,7 @@ end
 
 # ╔═╡ 3f3d4bcf-3f2b-4140-ba52-2246c5140303
 if autorun2
-	df
+	sort!(df, :TestAcc, rev=true)
 end
 
 # ╔═╡ 9b292713-1580-48ae-b9cc-05dca097a673
@@ -636,16 +688,16 @@ begin
 	if autorun2
 		set_default_plot_size(18cm, 16cm)
 		Gadfly.plot(
-			sort(df, :testerr),
+			sort(df, :TestAcc),
 			layer(
-				x=:testerr, y=:Type, 
+				x=:TestAcc, y=:Type, 
 				Geom.point, 
 				color=[colorant"#de425b"],
 				size = [1.5mm],
 				alpha = [0.7]
 			),
 			layer(
-				x=:trainerr, y=:Type, 
+				x=:TrainAcc, y=:Type, 
 				Geom.point, 
 				color=[colorant"#488f31"],
 				size = [1.5mm],
@@ -659,7 +711,7 @@ begin
 			Guide.xlabel("Accuracy"),
 			Guide.manual_color_key(
 				"",
-				["Test Error","Train Error", "Baseline"], 
+				["Test Acc","Train Acc", "Baseline"], 
 				[colorant"#de425b", colorant"#488f31", "gray"],
 				size = [1.5mm],
 				shape = [Gadfly.Shape.circle, Gadfly.Shape.circle, Gadfly.Shape.square]
@@ -680,7 +732,7 @@ end
 # ╟─b8077eb3-ec64-4a84-9dcc-3aafce015597
 # ╟─e8182e69-8776-4ab5-a38e-bf2175ceb0ea
 # ╟─910d24a0-8c00-42c5-8e11-13da2557a09d
-# ╠═a0ae476e-7939-4bfe-83e4-9666d0ed366e
+# ╟─a0ae476e-7939-4bfe-83e4-9666d0ed366e
 # ╟─705723ac-b0e0-4205-b3aa-8b516f9233d4
 # ╟─dc92cbff-ccf1-4355-8d60-0e2f39dac6b0
 # ╟─39f64d00-350d-43a6-bf57-06600aac2365
@@ -724,6 +776,7 @@ end
 # ╟─09bc8c83-2f25-44a0-81ab-9f0a5724673f
 # ╠═2c9b5aef-ba63-44b6-8ef9-ca31cc682fad
 # ╟─ae624404-0770-41e9-962b-139006356ea6
+# ╟─bf1623dc-865d-4339-ae38-74457d7685c1
 # ╟─f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 # ╟─82ffc65d-54ea-42ae-a7ef-dbe6216b0d1e
 # ╟─121fd299-5e82-4159-8472-5d385c736c18
@@ -731,6 +784,7 @@ end
 # ╟─406e7ffe-fa01-4622-ae09-aca5473bfe6c
 # ╟─a5126ad3-19b1-4b4e-b96f-ef6b5220854b
 # ╟─f9a60263-7ebd-4df8-b33f-5f0e85719186
+# ╟─8f8bb837-ed86-4a75-8254-913530ed8bc5
 # ╟─2999257a-03bf-4313-8dd6-d2da0ed2ef9c
 # ╟─65d45fbd-09bf-49e9-b027-e43751ce070f
 # ╟─bf8314d6-eb38-4594-afb0-eed5f3151389
