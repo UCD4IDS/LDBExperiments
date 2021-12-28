@@ -181,7 +181,16 @@ function get_mnist_dataset(train_size::T = 10000, test_size::T = 10000, pad_widt
     return get_mnist_dataset(repeat([train_size], 10), repeat([test_size], 10), pad_widths, dir)
 end
 
-# Subsamples the data from MNIST
+"""
+    get_subsample(X, y, size)
+
+Subsamples the data from MNIST.
+
+# Arguments
+- `X::AbstractArray{T} where T`: Data.
+- `y::AbstractVector{S} where S`: Corresponding classes.
+- `size::Vector{R} where R<:Integer`: Subsample size for each category.
+"""
 function get_subsample(X::AbstractArray{T}, y::AbstractVector{S}, size::Vector{R}) where 
                       {T, S, R<:Integer}
     # Allocate variable to store list of subsamples
