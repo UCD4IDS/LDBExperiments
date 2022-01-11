@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.17.4
 
 using Markdown
 using InteractiveUtils
@@ -38,7 +38,9 @@ end
 # ╔═╡ aa7ba1e0-ff23-4406-96a1-4406b4e94399
 begin
 	include("./src/data.jl")
+	include("./src/plots.jl")
 	import .LDBDatasets: get_dataset, textures_label
+	import .LDBPlots: plot_emap, plot_emaps
 end
 
 # ╔═╡ 45f88030-a821-11eb-0c6d-f5c7c82b7115
@@ -133,6 +135,7 @@ end;
 
 # ╔═╡ 39f64d00-350d-43a6-bf57-06600aac2365
 begin
+	gr(size=(700,400))
 	if sigtype ∈ ["Triangular", "Cylinder-Bell-Funnel"]
 		p1 = wiggle(X₀[:,1:5], sc=0.5)
 		Plots.plot!(xlab = "Class 1")
@@ -342,60 +345,29 @@ if autorun
 end
 
 # ╔═╡ ae624404-0770-41e9-962b-139006356ea6
-md"`WaveletsExt.jl` provides interfaces to understand the results of LDB. For example we can visualize the energy/probability density maps for each class by accessing the `Γ` attribute in the fitted LDB object. The plots below shows the energy/probability density maps for each class, where darker colors indicate that the sub-band has a higher discriminant power."
+md"`WaveletsExt.jl` provides interfaces to understand the results of LDB. For example we can visualize the energy/probability density maps for each class by accessing the `Γ` attribute in the fitted LDB object. The plots below shows the energy/probability density maps for each class, where darker colors indicate that the sub-band has a higher discriminant power.
 
-# ╔═╡ bf1623dc-865d-4339-ae38-74457d7685c1
-md"
-### TODO: Figure out how to deal with following plot for 2D and ProbabilityDensity case"
+*Note: When probability density maps are selected, a slider will appear below the energy maps below. Use the slider to select the position of the probability density function and compare the energy maps between classes.*"
+
+# ╔═╡ f1727ea3-7353-4c6a-bc13-51622c615780
+if autorun && ldb₀.en == ProbabilityDensity()
+	pdf_len = st[sigtype] ∈ [:tri, :cbf] ? size(ldb₀.Γ,3) : size(ldb₀.Γ,4)
+	@bind i Slider(1:pdf_len)
+end
 
 # ╔═╡ f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 begin
-	function plot_emap(emap::AbstractArray; legend = true, clim=(0,maximum(emap)))
-		
-		start = 0
-		ncol, nrow = size(emap)
-		emap = emap'
-
-		p = Plots.heatmap(
-			start:(ncol+start-1), 
-			0:(nrow-1), 
-			emap, 
-			c = :matter, 
-			background_color = :black,
-			legend = legend,
-			clim = clim
-		)
-
-		Plots.plot!(p, xlims = (start-0.5, ncol+start-0.5), 
-			ylims = (-0.5, nrow-0.5), yticks = 0:nrow)
-		# plot horizontal lines
-		for j in 0:(nrow-1)
-			Plots.plot!(p, (start-0.5):(ncol+start-0.5), (j-0.5)*ones(ncol+1), 
-				color = :black, legend = false)
-		end
-
-		# plot vertical lines
-		for j in 1:(nrow-1)
-			for jj in 1:2^(j-1)
-				vpos = (ncol/2^j)*(2*jj-1)+start-0.5;
-				Plots.plot!(p, vpos*ones(nrow-j+1), j-0.5:nrow-0.5, color = :black)
-			end
-		end
-		Plots.plot!(p, (ncol+start-0.5)*ones(nrow+1), -0.5:nrow-0.5, color = :black)
-		Plots.plot!(p, (start-0.5)*ones(nrow+1), -0.5:nrow-0.5, color = :black)
-		Plots.plot!(p, yaxis = :flip)
-
-		return p
-	end
 	if autorun
-		gr(size=(700,600))
-		hmap1 = plot_emap(ldb₀.Γ[:,:,1], clim = (0,0.6))
-		Plots.plot!(ylabel = "Class 1")
-		hmap2 = plot_emap(ldb₀.Γ[:,:,2], clim = (0,0.6))
-		Plots.plot!(ylabel = "Class 2")
-		hmap3 = plot_emap(ldb₀.Γ[:,:,3], clim = (0,0.6))
-		Plots.plot!(ylabel = "Class 3")
-		Plots.plot(hmap1, hmap2, hmap3, layout=(3,1))
+		if ldb₀.en == TimeFrequency()
+			st[sigtype]∈[:tri,:cbf] ? gr(size=(700,600)) : gr(size=(600,1800))
+			plot_emaps(ldb₀.Γ, ldb₀.tree)
+		elseif ldb₀.en == ProbabilityDensity() && st[sigtype] ∈ [:tri, :cbf]
+			gr(size=(700,600))
+			plot_emaps(ldb₀.Γ[:,:,i,:], ldb₀.tree)
+		elseif ldb₀.en == ProbabilityDensity() && st[sigtype] ∈ [:textures, :mnist]
+			gr(size=(600,1800))
+			plot_emaps(ldb₀.Γ[:,:,:,i,:], ldb₀.tree)
+		end
 	end
 end
 
@@ -405,12 +377,9 @@ md"We can also visualize the discriminant measure map and the selected nodes/sub
 # ╔═╡ 121fd299-5e82-4159-8472-5d385c736c18
 begin
 	if autorun
-		gr(size=(700,400))
-		dmap = plot_emap(
-			discriminant_measure(ldb₀.Γ, dm[d_measure]);
-			legend = true
-		)
-		tmap = plot_tfbdry(ldb₀.tree)
+		st[sigtype]≠:textures ? gr(size=(700,400)) : gr(size=(700,1800))
+		dmap = plot_emap(discriminant_measure(ldb₀.Γ, dm[d_measure]), ldb₀.tree)
+		tmap = st[sigtype]∈[:tri,:cbf] ? plot_tfbdry(ldb₀.tree) : plot_tfbdry2(ldb₀.tree)
 		Plots.plot(dmap, tmap, layout=(2,1))
 	end
 end
@@ -426,6 +395,19 @@ md"**Select** dataset"
 
 # ╔═╡ f9a60263-7ebd-4df8-b33f-5f0e85719186
 @bind sigtype2 Radio(["Cylinder-Bell-Funnel","Triangular", "Textures", "MNIST"], default = "Cylinder-Bell-Funnel")
+
+# ╔═╡ 6fef2648-058a-4136-8108-38c1624a19ca
+begin
+	if st[sigtype2] == :tri
+		@bind dim2 Slider(1:32, default=10, show_value=true)
+	elseif st[sigtype2] == :cbf
+		@bind dim2 Slider(1:128, default=10, show_value=true)
+	elseif st[sigtype2] == :textures
+		@bind dim2 Slider(1:128^2, default=10, show_value=true)
+	elseif st[sigtype2] == :mnist
+		@bind dim2 Slider(1:32^2, default=10, show_value=true)
+	end
+end
 
 # ╔═╡ 8f8bb837-ed86-4a75-8254-913530ed8bc5
 md"""
@@ -480,9 +462,6 @@ md"**Select** the type of discriminant measure"
 
 # ╔═╡ 2bf768ee-7bc7-4039-85d2-dbdf9ed1f75a
 md"**Select** the numbers of features to extract"
-
-# ╔═╡ 6fef2648-058a-4136-8108-38c1624a19ca
-@bind dim2 Slider(1:length(X₀[:,1]), default=10, show_value=true)
 
 # ╔═╡ 60cffbcf-d539-4038-9a12-c40fa41d6880
 md"**Auto Run**: Check the box after you are satisfied with the experiment parameters or when you want to re-run the experiment (uncheck and check again)
@@ -720,6 +699,9 @@ begin
 	end
 end
 
+# ╔═╡ e58b5f6a-c4da-4125-be5a-7f9125d3f326
+
+
 # ╔═╡ Cell order:
 # ╟─45f88030-a821-11eb-0c6d-f5c7c82b7115
 # ╠═45468d3a-3456-4e99-aec8-b3c41b20a426
@@ -735,7 +717,7 @@ end
 # ╟─a0ae476e-7939-4bfe-83e4-9666d0ed366e
 # ╟─705723ac-b0e0-4205-b3aa-8b516f9233d4
 # ╟─dc92cbff-ccf1-4355-8d60-0e2f39dac6b0
-# ╟─39f64d00-350d-43a6-bf57-06600aac2365
+# ╠═39f64d00-350d-43a6-bf57-06600aac2365
 # ╟─3c077b0c-ad81-43bf-af45-32d7f48185c7
 # ╟─25720fa1-ad95-451d-8143-ba34b6e0551b
 # ╟─e0c92531-1e17-4757-885d-408d62829766
@@ -776,14 +758,15 @@ end
 # ╟─09bc8c83-2f25-44a0-81ab-9f0a5724673f
 # ╠═2c9b5aef-ba63-44b6-8ef9-ca31cc682fad
 # ╟─ae624404-0770-41e9-962b-139006356ea6
-# ╟─bf1623dc-865d-4339-ae38-74457d7685c1
 # ╟─f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
+# ╟─f1727ea3-7353-4c6a-bc13-51622c615780
 # ╟─82ffc65d-54ea-42ae-a7ef-dbe6216b0d1e
-# ╟─121fd299-5e82-4159-8472-5d385c736c18
+# ╠═121fd299-5e82-4159-8472-5d385c736c18
 # ╟─96a49a0c-4646-43f9-98c2-09ac484f6df8
 # ╟─406e7ffe-fa01-4622-ae09-aca5473bfe6c
 # ╟─a5126ad3-19b1-4b4e-b96f-ef6b5220854b
 # ╟─f9a60263-7ebd-4df8-b33f-5f0e85719186
+# ╟─6fef2648-058a-4136-8108-38c1624a19ca
 # ╟─8f8bb837-ed86-4a75-8254-913530ed8bc5
 # ╟─2999257a-03bf-4313-8dd6-d2da0ed2ef9c
 # ╟─65d45fbd-09bf-49e9-b027-e43751ce070f
@@ -791,7 +774,6 @@ end
 # ╟─dde5cc7d-1840-49a9-bcd0-bf3ed6e66007
 # ╟─1b71478b-a386-416b-97dc-a2e5da1ce071
 # ╟─2bf768ee-7bc7-4039-85d2-dbdf9ed1f75a
-# ╟─6fef2648-058a-4136-8108-38c1624a19ca
 # ╟─60cffbcf-d539-4038-9a12-c40fa41d6880
 # ╠═7a9548a4-c528-41af-bba7-a99b0c91247b
 # ╠═4774bfcf-9e50-428c-b51f-76a887031862
@@ -816,3 +798,4 @@ end
 # ╠═3f3d4bcf-3f2b-4140-ba52-2246c5140303
 # ╟─9b292713-1580-48ae-b9cc-05dca097a673
 # ╠═c1b823e9-4a80-4cca-9527-5b0f2933933d
+# ╠═e58b5f6a-c4da-4125-be5a-7f9125d3f326
