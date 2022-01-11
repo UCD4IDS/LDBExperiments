@@ -165,8 +165,8 @@ function get_mnist_dataset(train_size::AbstractVector{T} = 10000,
     # Downloads the MNIST dataset
     isdir(dir) || MNIST.download(dir, i_accept_the_terms_of_use = true)
     # Unpack the downloaded data into variables
-    train_x, train_y = MNIST.traindata(dir = dir)
-    test_x, test_y = MNIST.testdata(dir = dir)
+    train_x, train_y = MNIST.traindata(Float64, dir = dir)
+    test_x, test_y = MNIST.testdata(Float64, dir = dir)
     # Zero padding to make 28x28 images into 32x32 (using default settings)
     train_x = cat(train_x, dims = 3) |> x -> zero_padding(x, pad_widths)
     test_x = cat(test_x, dims = 3) |> x -> zero_padding(x, pad_widths)
