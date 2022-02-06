@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.4
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -20,6 +20,9 @@ let
 	Pkg.activate(".")
 	Pkg.instantiate()
 end
+
+# ╔═╡ a2e926ee-6398-48bb-b0cc-8d891fc5a26f
+Pkg.add("ImageIO")
 
 # ╔═╡ 5ad9f0fb-3688-4b15-94c1-a18e5f41eeed
 begin
@@ -716,8 +719,9 @@ end
 # ╟─910d24a0-8c00-42c5-8e11-13da2557a09d
 # ╟─a0ae476e-7939-4bfe-83e4-9666d0ed366e
 # ╟─705723ac-b0e0-4205-b3aa-8b516f9233d4
+# ╠═a2e926ee-6398-48bb-b0cc-8d891fc5a26f
 # ╟─dc92cbff-ccf1-4355-8d60-0e2f39dac6b0
-# ╠═39f64d00-350d-43a6-bf57-06600aac2365
+# ╟─39f64d00-350d-43a6-bf57-06600aac2365
 # ╟─3c077b0c-ad81-43bf-af45-32d7f48185c7
 # ╟─25720fa1-ad95-451d-8143-ba34b6e0551b
 # ╟─e0c92531-1e17-4757-885d-408d62829766
@@ -761,7 +765,7 @@ end
 # ╟─f7669f3f-9e34-4dc1-b3d4-7eda7fe6e479
 # ╟─f1727ea3-7353-4c6a-bc13-51622c615780
 # ╟─82ffc65d-54ea-42ae-a7ef-dbe6216b0d1e
-# ╠═121fd299-5e82-4159-8472-5d385c736c18
+# ╟─121fd299-5e82-4159-8472-5d385c736c18
 # ╟─96a49a0c-4646-43f9-98c2-09ac484f6df8
 # ╟─406e7ffe-fa01-4622-ae09-aca5473bfe6c
 # ╟─a5126ad3-19b1-4b4e-b96f-ef6b5220854b
