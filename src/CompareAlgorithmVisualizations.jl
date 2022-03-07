@@ -1,7 +1,9 @@
 # ==========================================================================================
-# COMPARISON OF 3 DIFFERENT LOCAL DISCRIMINANT BASIS (LDB) ALGORITHMS
+# COMPARISON OF FEATURE EXTRACTION BETWEEN 3 DIFFERENT LOCAL DISCRIMINANT BASIS (LDB) 
+# ALGORITHMS
 #
-# This is the source code used to compare the 3 LDB algorithms:
+# This is the source code used to compare the differences in feature extraction capabilities
+# between 3 LDB algorithms:
 #   1) LDBK:
 #           LDB that relies on the Time-Frequency energy distribution of classes. When
 #           computing the discriminant measures of each node in the decomposed binary tree,
@@ -54,10 +56,13 @@
 using Wavelets, 
       WaveletsExt,
       Statistics,
-      Plots
+      Plots,
+      MLJ,
+      DataFrames
+
+include("utils.jl")
 
 ## ========== Setup ==========
-# TODO: Change dataset and data size
 train_x, train_y = generateclassdata(ClassData(:tri, 33 , 33 , 33 ), false)
 test_x , test_y  = generateclassdata(ClassData(:tri, 333, 333, 333), true)
 # TODO: Change wavelet filter
@@ -108,22 +113,16 @@ plot!(p01, class3_mean, linestyle=:dot, color=:black, label="Class 3")
 plot!(p01, title="Mean training waveform")
 
 ## ========== Fit LDB ==========
-ldbk_features    = fit_transform(ldbk   , train_x, train_y)
-ldbkash_features = fit_transform(ldbkash, train_x, train_y)
-ldbkemd_features = fit_transform(ldbkemd, train_x, train_y)
+# Fit and transform training data
+ldbk_train_features    = WaveletsExt.fit_transform(ldbk   , train_x, train_y)
+ldbkash_train_features = WaveletsExt.fit_transform(ldbkash, train_x, train_y)
+ldbkemd_train_features = WaveletsExt.fit_transform(ldbkemd, train_x, train_y)
+# Transform test data
+ldbk_test_features    = WaveletsExt.transform(ldbk, test_x)
+ldbkash_test_features = WaveletsExt.transform(ldbkash, test_x)
+ldbkemd_test_features = WaveletsExt.transform(ldbkemd, test_x)
 
 ## ========== Display top N LDB vectors ==========
-function compute_ldb_vectors(ldb::LocalDiscriminantBasis, N::Integer)
-    n = ldb.sz[1]                               # Signal length
-    topN_subspace = ldb.order[1:N]              # Position of top N subspace
-    vectors = zeros(n,N)                        # Build matrix to containing top N subspace
-    for (j, i) in enumerate(topN_subspace)
-        vectors[i,j] = 1
-    end
-    vectors = iwptall(vectors, wt, ldb.tree)    # Inverse transform matrix
-    return vectors
-end
-
 # TODO: Change the value of N (Default: 3)
 N = 3
 ldbk_vec = compute_ldb_vectors(ldbk, N)
@@ -139,15 +138,47 @@ p06 = plot_tfbdry(ldbkash.tree)
 p07 = plot_tfbdry(ldbkemd.tree)
 
 ## ===== Scatter plot of coefficients in the top 2 most discriminating LDB coordinates =====
-function plot_coefficients(data)
-    p = scatter(data[1,1:33], data[2,1:33], shape=:circle, color=:black, label="Class 1")
-    scatter!(p, data[1,34:66], data[2,34:66], shape=:star5, color=:yellow, label="Class 2")
-    scatter!(p, data[1,67:99], data[2,67:99], shape=:cross, color=:green, label="Class 3")
-    return p
-end
-
-p08 = plot_coefficients(ldbk_features) |> p -> plot!(p, title="LDBK")
-p09 = plot_coefficients(ldbkash_features) |> p -> plot!(p, title="LDBKASH")
-p10 = plot_coefficients(ldbkemd_features) |> p -> plot!(p, title="LDBKEMD")
+p08 = plot_coefficients(ldbk_train_features) |> p -> plot!(p, title="LDBK")
+p09 = plot_coefficients(ldbkash_train_features) |> p -> plot!(p, title="LDBKASH")
+p10 = plot_coefficients(ldbkemd_train_features) |> p -> plot!(p, title="LDBKEMD")
 
 ## ========== Fit features in Linear Discriminant Analysis (LDA) classifier ==========
+# Data wrangling to fit MLJ.jl syntax
+original_train_features = DataFrame(train_x', :auto)
+ldbk_train_features     = DataFrame(ldbk_train_features', :auto)
+ldbkash_train_features  = DataFrame(ldbkash_train_features', :auto)
+ldbkemd_train_features  = DataFrame(ldbkemd_train_features', :auto)
+train_y = coerce(train_y, Multiclass)
+original_test_features = DataFrame(test_x', :auto)
+ldbk_test_features     = DataFrame(ldbk_test_features', :auto)
+ldbkash_test_features  = DataFrame(ldbkash_test_features', :auto)
+ldbkemd_test_features  = DataFrame(ldbkemd_test_features', :auto)
+test_y = coerce(test_y, Multiclass)
+# Model fitting
+LDA = @load LDA pkg=MultivariateStats
+original_classifier = machine(LDA(), original_train_features, train_y)
+ldbk_classifier     = machine(LDA(), ldbk_train_features, train_y)
+ldbkash_classifier  = machine(LDA(), ldbkash_train_features, train_y)
+ldbkemd_classifier  = machine(LDA(), ldbkemd_train_features, train_y)
+MLJ.fit!(original_classifier)
+MLJ.fit!(ldbk_classifier)
+MLJ.fit!(ldbkash_classifier)
+MLJ.fit!(ldbkemd_classifier)
+# Model predictions
+original_train_ŷ = predict_mode(original_classifier, original_train_features)
+ldbk_train_ŷ     = predict_mode(ldbk_classifier    , ldbk_train_features)
+ldbkash_train_ŷ  = predict_mode(ldbkash_classifier , ldbkash_train_features)
+ldbkemd_train_ŷ  = predict_mode(ldbkemd_classifier , ldbkemd_train_features)
+original_test_ŷ = predict_mode(original_classifier, original_test_features)
+ldbk_test_ŷ     = predict_mode(ldbk_classifier    , ldbk_test_features)
+ldbkash_test_ŷ  = predict_mode(ldbkash_classifier , ldbkash_test_features)
+ldbkemd_test_ŷ  = predict_mode(ldbkemd_classifier , ldbkemd_test_features)
+# Evaluate Model
+original_train_accuracy = Accuracy()(original_train_ŷ, train_y)
+ldbk_train_accuracy     = Accuracy()(ldbk_train_ŷ    , train_y)
+ldbkash_train_accuracy  = Accuracy()(ldbkash_train_ŷ , train_y)
+ldbkemd_train_accuracy  = Accuracy()(ldbkemd_train_ŷ , train_y)
+original_test_accuracy = Accuracy()(original_test_ŷ, test_y)
+ldbk_test_accuracy     = Accuracy()(ldbk_test_ŷ    , test_y)
+ldbkash_test_accuracy  = Accuracy()(ldbkash_test_ŷ , test_y)
+ldbkemd_test_accuracy  = Accuracy()(ldbkemd_test_ŷ , test_y)
