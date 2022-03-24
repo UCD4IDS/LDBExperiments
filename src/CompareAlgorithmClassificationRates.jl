@@ -55,10 +55,10 @@ ldbkemd = LocalDiscriminantBasis(wt = wt,
 ldbs = Dict("ldbk" => ldbk, "ldbkash" => ldbkash, "ldbkemd" => ldbkemd)
 # TODO: Make hyperparameter changes if necessary
 LDA = @load LDA pkg=MultivariateStats
-CT = @load DecisionTreeClassifier pkg=DecisionTrees
+CT = @load DecisionTreeClassifier pkg=DecisionTree
 classifiers = Dict("LDA" => LDA(), "CT" => CT())
 # TODO: Make changes to model evaluation measures if necessary
-measures = [MisclassificationRate()]
+measure = [MisclassificationRate(), Accuracy()]
 
 ## ========== Run experiments ==========
-results = repeat_experiment(ldbs, classifiers, measurs)
+results = repeat_experiment(ldbs, classifiers, measure)

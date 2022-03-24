@@ -125,6 +125,22 @@ function repeat_experiment(ldbs::Union{Dict{String, T₁}, Vector{T₁}},
     return results
 end
 
+"""
+    dict2dataframes(results)
+
+Organizes a dictionary of results into a list of data frames.
+
+# Arguments
+- `results::Dict`: Dictionary of results.
+
+# Returns
+- `Vector{DataFrame}`: List of data frames containing the organized results.
+"""
+function dict2dataframes(results::Dict)
+    models = (collect ∘ keys)(results["experiment 1"]["ldbk"])
+    metrics = (collect ∘ keys)(results["experiment 1"]["ldbk"][models[1]]["train"])
+end
+
 h₁(i::Int) = max(6 - abs(i-7), 0)
 h₂(i::Int) = h₁(i - 8)
 h₃(i::Int) = h₁(i - 4)
