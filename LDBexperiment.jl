@@ -21,9 +21,6 @@ let
 	Pkg.instantiate()
 end
 
-# ╔═╡ a2e926ee-6398-48bb-b0cc-8d891fc5a26f
-Pkg.add("ImageIO")
-
 # ╔═╡ 5ad9f0fb-3688-4b15-94c1-a18e5f41eeed
 begin
 	using 
@@ -493,8 +490,8 @@ begin
 		(X_train, y_train), (X_test, y_test) = get_dataset(st[sigtype2], args2...)
 
 		nclass_train, nclass_test = (length∘unique)(y_train), (length∘unique)(y_test)
-		X.train["STD"]= reshape(X_train,:,33*nclass_train)'
-		X.test["STD"] = reshape(X_test,:,333*nclass_test)'
+		X.train["STD"]= DataFrame(reshape(X_train,:,33*nclass_train)', :auto)
+		X.test["STD"] = DataFrame(reshape(X_test,:,333*nclass_test)', :auto)
 		y.train["STD"], y.test["STD"] = coerce(y_train, Multiclass), coerce(y_test, Multiclass)
 	end
 end;
@@ -611,8 +608,8 @@ begin
 									 en = em[e_measure],
 									 n_features = dim2)
 		WaveletsExt.fit!(ldb, X_train, y_train)
-		X.train[ldbk] = WaveletsExt.transform(ldb, X_train)';
-		X.test[ldbk] = WaveletsExt.transform(ldb, X_test)';
+		X.train[ldbk] = DataFrame(WaveletsExt.transform(ldb, X_train)', :auto);
+		X.test[ldbk] = DataFrame(WaveletsExt.transform(ldb, X_test)', :auto);
 	end
 end;
 
@@ -649,8 +646,8 @@ end
 begin
 	if autorun2
 		WaveletsExt.fit!(ldb₁, X_train, y_train)
-		X.train["LDB"] = WaveletsExt.transform(ldb₁, X_train)'
-		X.test["LDB"] = WaveletsExt.transform(ldb₁, X_test)'
+		X.train["LDB"] = DataFrame(WaveletsExt.transform(ldb₁, X_train)', :auto)
+		X.test["LDB"] = DataFrame(WaveletsExt.transform(ldb₁, X_test)', :auto)
 		for machine in dfm.name
 			evaluate_model!(dfm, df, machine, "LDB", X, y)
 		end
@@ -719,7 +716,6 @@ end
 # ╟─910d24a0-8c00-42c5-8e11-13da2557a09d
 # ╟─a0ae476e-7939-4bfe-83e4-9666d0ed366e
 # ╟─705723ac-b0e0-4205-b3aa-8b516f9233d4
-# ╠═a2e926ee-6398-48bb-b0cc-8d891fc5a26f
 # ╟─dc92cbff-ccf1-4355-8d60-0e2f39dac6b0
 # ╟─39f64d00-350d-43a6-bf57-06600aac2365
 # ╟─3c077b0c-ad81-43bf-af45-32d7f48185c7
