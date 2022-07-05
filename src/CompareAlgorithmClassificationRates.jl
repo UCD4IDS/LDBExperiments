@@ -14,6 +14,7 @@ using Wavelets,
       MLJ
 
 include("utils.jl")
+import .LDBUtils: repeat_experiment, dict2dataframes, aggregate_results
 
 ## ========= Setup =========
 # TODO: Change wavelet filter
@@ -52,13 +53,15 @@ ldbkemd = LocalDiscriminantBasis(wt = wt,
                                  dp = dp,
                                  top_k = k,
                                  n_features = n_features)
-ldbs = Dict("ldbk" => ldbk, "ldbkash" => ldbkash, "ldbkemd" => ldbkemd)
+ldbs = Dict("original" => nothing, "ldbk" => ldbk, "ldbkash" => ldbkash, "ldbkemd" => ldbkemd)
 # TODO: Make hyperparameter changes if necessary
-LDA = @load LDA pkg=MultivariateStats
-CT = @load DecisionTreeClassifier pkg=DecisionTree
+LDA = @load LDA pkg=MultivariateStats verbosity=0
+CT = @load DecisionTreeClassifier pkg=DecisionTree verbosity=0
 classifiers = Dict("LDA" => LDA(), "CT" => CT())
 # TODO: Make changes to model evaluation measures if necessary
-measure = [MisclassificationRate(), Accuracy()]
+measures = [MisclassificationRate(), MulticlassPrecision(), MulticlassTruePositiveRate()]
 
 ## ========== Run experiments ==========
-results = repeat_experiment(ldbs, classifiers, measure)
+results_raw = repeat_experiment(ldbs, classifiers, measures; repeats = 100)
+results_by_measure = Dict("$((string ∘ typeof)(measure))" => dict2dataframes(results_raw, measure) for measure in measures)
+results_aggregate = Dict(key => aggregate_results(value) for (key, value) in results_by_measure)

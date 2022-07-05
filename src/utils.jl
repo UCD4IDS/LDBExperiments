@@ -1,3 +1,25 @@
+module LDBUtils
+
+export compute_ldb_vectors,
+       plot_coefficients,
+       extract_feature!,
+       fit_model,
+       evaluate_model,
+       run_experiment,
+       repeat_experiment,
+       aggregate_results
+
+using Wavelets,
+      WaveletsExt,
+      Statistics,
+      DataFrames,
+      CSV,
+      MLJ,
+      Plots
+
+import JLD2: save
+import JSON
+
 function compute_ldb_vectors(ldb::LocalDiscriminantBasis, N::Integer)
     n = ldb.sz[1]                               # Signal length
     topN_subspace = ldb.order[1:N]              # Position of top N subspace
@@ -5,7 +27,7 @@ function compute_ldb_vectors(ldb::LocalDiscriminantBasis, N::Integer)
     for (j, i) in enumerate(topN_subspace)
         vectors[i,j] = 1
     end
-    vectors = iwptall(vectors, wt, ldb.tree)    # Inverse transform matrix
+    vectors = iwptall(vectors, ldb.wt, ldb.tree)    # Inverse transform matrix
     return vectors
 end
 
@@ -40,7 +62,8 @@ end
 
 function fit_model(ldb::Union{LocalDiscriminantBasis, Nothing},
                    classifier::Supervised,
-                   X::AbstractArray{T₁}, y::AbstractVector{T₂}) where
+                   X::AbstractArray{T₁}, y::AbstractVector{T₂};
+                   verbosity = 0) where
                   {T₁<:AbstractFloat, T₂}
     # Get LDB features
     train_features = isnothing(ldb) ? X : WaveletsExt.transform(ldb, X)
@@ -48,7 +71,7 @@ function fit_model(ldb::Union{LocalDiscriminantBasis, Nothing},
     Xₜ = DataFrame(train_features', :auto)
     yₜ = coerce(y, Multiclass)
     model = machine(classifier, Xₜ, yₜ)
-    MLJ.fit!(model)
+    MLJ.fit!(model; verbosity=verbosity)
     return model
 end
 
@@ -109,7 +132,9 @@ function repeat_experiment(ldbs::Union{Dict{String, T₁}, Vector{T₁}},
                            measures::Vector{T₃}; 
                            config_train::ClassData = ClassData(:cbf, 33, 33, 33),
                            config_test::ClassData = ClassData(:cbf, 333, 333, 333),
-                           repeats::Integer = 10, kwargs...) where
+                           repeats::Integer = 10,
+                           save_data::Bool = true,
+                           kwargs...) where
                           {T₁<:Union{LocalDiscriminantBasis, Nothing}, 
                            T₂<:Supervised,
                            T₃<:MLJ.MLJBase.Measure}
@@ -120,9 +145,26 @@ function repeat_experiment(ldbs::Union{Dict{String, T₁}, Vector{T₁}},
         X_train, y_train = generateclassdata(config_train, false)
         X_test, y_test = generateclassdata(config_test, true)
         _, resultᵢ = run_experiment(ldbs, classifiers, X_train, y_train, X_test, y_test, measures, kwargs...)
-        results["experiment $i"] = resultᵢ
+        results["$i"] = resultᵢ
+
+        # Save data and results
+        if save_data
+            path = "./results/experiment_data"
+            save("$path/exp$i.jld2",
+                 "X_train", X_train,
+                 "y_train", y_train,
+                 "X_test", X_test,
+                 "y_test", y_test)
+            save_to_json("$path/result$i.json", resultᵢ)
+        end
     end
     return results
+end
+
+function save_to_json(filepath::String, result::AbstractDict)
+    open(filepath, "w") do f
+        JSON.print(f, result, 4)
+    end
 end
 
 """
@@ -136,46 +178,59 @@ Organizes a dictionary of results into a list of data frames.
 # Returns
 - `Vector{DataFrame}`: List of data frames containing the organized results.
 """
-function dict2dataframes(results::Dict)
-    models = (collect ∘ keys)(results["experiment 1"]["ldbk"])
-    metrics = (collect ∘ keys)(results["experiment 1"]["ldbk"][models[1]]["train"])
+function dict2dataframes(results::Dict, measure::T; kwargs...) where T<:MLJ.MLJBase.Measure
+    measure_string = (string ∘ typeof)(measure)
+    return dict2dataframes(results, measure_string; kwargs...)
 end
 
-h₁(i::Int) = max(6 - abs(i-7), 0)
-h₂(i::Int) = h₁(i - 8)
-h₃(i::Int) = h₁(i - 4)
+function dict2dataframes(results::Dict, measure::String; save_data::Bool = true)
+    data_frame = DataFrame(
+        "Experiment" => UInt64[],
+        "Method" => String[],
+        "Classifier" => String[],
+        "Train_$measure" => Float64[],
+        "Test_$measure" => Float64[]
+    )
 
-"""
-  triangular_test_function(c1::Int, c2::Int, c3::Int, L::Int=32)
+    for (exp, exp_result) in results
+        for (ldb, ldb_result) in exp_result
+            for (clf, clf_result) in ldb_result
+                data = [
+                    parse(UInt64, exp),             # Experiment number
+                    ldb,                            # LDB method
+                    clf,                            # Classifier
+                    clf_result["train"][measure],   # Train metric
+                    clf_result["test"][measure]     # Test metric
+                ]
+                push!(data_frame, data)
+            end
+        end
+    end
 
-Generates a set of triangluar test functions with 3 classes.
-"""
-function triangular_test_functions(c1::Int, c2::Int, c3::Int; L::Int=32, shuffle::Bool=false)
-  @assert c1 >= 0
-  @assert c2 >= 0
-  @assert c3 >= 0
+    if save_data
+        CSV.write("./results/complete/$measure.csv", data_frame)
+    end
 
-  u = rand(Uniform(0,1),1)[1]
-  ϵ = rand(Normal(0,1),(L,c1+c2+c3))
-
-  y = string.(vcat(ones(c1), ones(c2) .+ 1, ones(c3) .+ 2))
-
-  H₁ = Array{Float64,2}(undef,L,c1)
-  H₂ = Array{Float64,2}(undef,L,c2)
-  H₃ = Array{Float64,2}(undef,L,c3)
-  for i in 1:L
-    H₁[i,:] .= u * h₁(i) + (1 - u) * h₂(i)
-    H₂[i,:] .= u * h₁(i) + (1 - u) * h₃(i)
-    H₃[i,:] .= u * h₂(i) + (1 - u) * h₃(i)
-  end
-
-  H = hcat(H₁, H₂, H₃) + ϵ
-
-  if shuffle
-    idx = [1:(c1+c2+c3)...]
-    shuffle!(idx)
-    return H[:,idx], y[idx]
-  end
-
-  return H, y
+    return data_frame
 end
+
+
+function get_measure_name(data::Vector{String})
+    reg_match = [match(r"^(Train|Test)_([A-Za-z0-9]*)", str) for str in data]
+    first_match_index = findall(!isnothing, reg_match)[1]
+    return reg_match[first_match_index][2]
+end
+
+function aggregate_results(result::DataFrame; save_data::Bool = true)
+    results_grouped = groupby(result, [:Method, :Classifier])
+    results_combined = combine(results_grouped, r"^Train" => mean, r"^Test" => mean, renamecols = false)
+
+    if save_data
+        measure = (get_measure_name ∘ names)(result)
+        CSV.write("./results/aggregate/$measure.csv", results_combined)
+    end
+
+    return results_combined
+end
+
+end # module
