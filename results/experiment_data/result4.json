@@ -1,0 +1,106 @@
+{
+    "original": {
+        "CT": {
+            "test": {
+                "MisclassificationRate": 0.1971971971971972,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8017989417989418,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8028028028028028
+            },
+            "train": {
+                "MisclassificationRate": 0.0,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0
+            }
+        },
+        "LDA": {
+            "test": {
+                "MisclassificationRate": 0.3163163163163163,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.6854658534850764,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.6836836836836837
+            },
+            "train": {
+                "MisclassificationRate": 0.0,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0
+            }
+        }
+    },
+    "ldbk": {
+        "CT": {
+            "test": {
+                "MisclassificationRate": 0.0980980980980981,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.9030947576608646,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.9019019019019018
+            },
+            "train": {
+                "MisclassificationRate": 0.0,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0
+            }
+        },
+        "LDA": {
+            "test": {
+                "MisclassificationRate": 0.16716716716716717,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8378572751637767,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8328328328328328
+            },
+            "train": {
+                "MisclassificationRate": 0.1111111111111111,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8964912280701754,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.888888888888889
+            }
+        }
+    },
+    "ldbkash": {
+        "CT": {
+            "test": {
+                "MisclassificationRate": 0.2982982982982983,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.7012900831848505,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.7017017017017017
+            },
+            "train": {
+                "MisclassificationRate": 0.0,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0
+            }
+        },
+        "LDA": {
+            "test": {
+                "MisclassificationRate": 0.46046046046046046,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.5319890902279791,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.5395395395395396
+            },
+            "train": {
+                "MisclassificationRate": 0.1919191919191919,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8080808080808081,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.808080808080808
+            }
+        }
+    },
+    "ldbkemd": {
+        "CT": {
+            "test": {
+                "MisclassificationRate": 0.08808808808808809,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.9169669117228066,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.9119119119119118
+            },
+            "train": {
+                "MisclassificationRate": 0.0,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 1.0
+            }
+        },
+        "LDA": {
+            "test": {
+                "MisclassificationRate": 0.15715715715715717,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8483829876559057,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8428428428428427
+            },
+            "train": {
+                "MisclassificationRate": 0.10101010101010101,
+                "MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.9027777777777778,
+                "MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}": 0.8989898989898991
+            }
+        }
+    }
+}
