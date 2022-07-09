@@ -20,7 +20,19 @@ using Wavelets,
 import JLD2: save
 import JSON
 
-function compute_ldb_vectors(ldb::LocalDiscriminantBasis, N::Integer)
+"""
+    compute_ldb_vectors(ldb, N)
+
+Computes the LocalDiscriminantBasis basis vectors for the top N subspace.
+
+# Arguments
+- `ldb::LocalDiscriminantBasis`: LocalDiscriminantBasis object.
+- `N::Integer`: Subspace size to be computed.
+
+# Returns
+- ``n \times N`` matrix where each column is a basis vector for the top N subspace.
+"""
+function compute_ldb_vectors(ldb::LocalDiscriminantBasis, N::T) where T<:Integer
     n = ldb.sz[1]                               # Signal length
     topN_subspace = ldb.order[1:N]              # Position of top N subspace
     vectors = zeros(n,N)                        # Build matrix to containing top N subspace
@@ -31,6 +43,14 @@ function compute_ldb_vectors(ldb::LocalDiscriminantBasis, N::Integer)
     return vectors
 end
 
+"""
+    plot_coefficients(data)
+
+Scatter plot of the top-2 subspace coefficients of each datapoint of each class.
+
+# Arguments
+- `data`: The matrix where each column is a basis vector for the top N subspace.
+"""
 function plot_coefficients(data)
     p = scatter(data[1,1:33], data[2,1:33], shape=:circle, color=:black, label="Class 1")
     scatter!(p, data[1,34:66], data[2,34:66], shape=:star5, color=:yellow, label="Class 2")
@@ -39,7 +59,18 @@ function plot_coefficients(data)
 end
 
 """
+    extract_feature!(ldb, X, y[; return_plots, N])
 
+Compute LDB and extract features on the data-class pair (X,y).
+
+# Arguments
+- `ldb`: LocalDiscriminantBasis object.
+- `X`: Columns of 1D-training data.
+- `y`: Corresponding labels
+
+# Keyword Arguments
+- `return_plots`: (Default: `false`) Whether or not to return analysis plots.
+- `N`: (Default: 3) Subspace size for LDB feature extraction.
 """
 function extract_feature!(ldb::Union{LocalDiscriminantBasis, Nothing},
                           X::AbstractArray{T₁}, y::AbstractVector{T₂};
@@ -60,6 +91,20 @@ function extract_feature!(ldb::Union{LocalDiscriminantBasis, Nothing},
     end
 end
 
+"""
+    fit_model(ldb, classifier, X, y[; verbosity])
+
+Given signals X and class labels y, compute LDB transform and fit data into classifier.
+
+# Arguments
+- `ldb`: LocalDiscriminantBasis object.
+- `classifier`: MLJ supervised classifier.
+- `X`: Columns of 1D-training data.
+- `y`: Corresponding labels
+
+# Keyword Arguments
+- `verbosity`: (Default: 0) Verbosity value for `MLJ.fit!`.
+"""
 function fit_model(ldb::Union{LocalDiscriminantBasis, Nothing},
                    classifier::Supervised,
                    X::AbstractArray{T₁}, y::AbstractVector{T₂};
@@ -75,6 +120,18 @@ function fit_model(ldb::Union{LocalDiscriminantBasis, Nothing},
     return model
 end
 
+"""
+    evaluate_model(ldb, model, X, y, measures)
+
+Evaluate the model based on the list of `measures`.
+
+# Arguments
+- `ldb`: LocalDiscriminantBasis object.
+- `model`: MLJ machine object.
+- `X`: Columns of 1D-training data.
+- `y`: Corresponding labels.
+- `measures`: List of MLJ.MLJBase.Measure.
+"""
 function evaluate_model(ldb::Union{LocalDiscriminantBasis, Nothing},
                         model::Machine,
                         X::AbstractArray{T₁}, y::AbstractVector{T₂},
@@ -95,10 +152,34 @@ function evaluate_model(ldb::Union{LocalDiscriminantBasis, Nothing},
     return result
 end
 
+"""
+    vector2dict(vec, suffix)
+
+Converts vector of data to dictionary of data.
+
+# Arguments
+- `vec`: Vector of data.
+- `suffix`: Suffix to name the keys in the dictionary.
+"""
 function vector2dict(vec::Vector{T₁}, suffix::String = "method") where T₁
     return Dict("$(suffix)_$i" => data for (i, data) in enumerate(vec))
 end
 
+"""
+    run_experiment(ldbs, classifiers, X_train, y_train, X_test, y_test, measures)
+
+Run 1 round of experiment on different types of LDB and classifiers based on a given train
+and test data set.
+
+# Arguments
+- `ldbs`: List/Dictionary of LocalDiscriminantBasis object.
+- `classifiers`: List/Dictionary of MLJ Supervised classifiers.
+- `X_train`: Columns of 1D-training data.
+- `y_train`: Corresponding training labels.
+- `X_test`: Columns of 1D-test data.
+- `y_test`: Corresponding test labels.
+- `measures`: List of model evaluation measures.
+"""
 function run_experiment(ldbs::Union{Dict{String, T₁}, Vector{T₁}},
                         classifiers::Union{Dict{String, T₂}, Vector{T₂}},
                         X_train::AbstractArray{T₃}, y_train::AbstractVector{T₄}, 
@@ -127,6 +208,24 @@ function run_experiment(ldbs::Union{Dict{String, T₁}, Vector{T₁}},
     return (model = models, result = result)
 end
 
+"""
+    repeat_experiment(ldbs, classifiers, measures[; config_train, config_test, repeats, save_data, kwargs...)
+    
+Run `run_experiment` function for `repeats` times by generating train and test data using
+the given configurations.
+
+# Arguments
+- `ldbs`: List/Dictionary of LocalDiscriminantBasis object.
+- `classifiers`: List/Dictionary of MLJ Supervised classifiers.
+- `measures`: List of model evaluation measures.
+
+# Keyword Arguments
+- `config_train`: (Default: `ClassData(:cbf, 33, 33, 33)`) Train data configurations.
+- `config_test`: (Default: `ClassData(:cbf, 333, 333, 333)`) Test data configurations.
+- `repeats`: (Default: `10`) Number of repeats of experiment.
+- `save_data`: (Default: `true`) Whether to save all the experiment data and their corresponding results.
+- `kwargs...`: Additional arguments for `run_experiment`.
+"""
 function repeat_experiment(ldbs::Union{Dict{String, T₁}, Vector{T₁}},
                            classifiers::Union{Dict{String, T₂}, Vector{T₂}}, 
                            measures::Vector{T₃}; 
@@ -183,6 +282,18 @@ function dict2dataframes(results::Dict, measure::T; kwargs...) where T<:MLJ.MLJB
     return dict2dataframes(results, measure_string; kwargs...)
 end
 
+"""
+    dict2dataframes(results, measure[; save_data])
+
+Convert dictionary of results to data frames.
+
+# Arguments
+- `results`: Experiment results.
+- `measure`: Measurement to be saved.
+
+# Keyword Arguments
+- `save_data`: (Default: `true`) Whether to save the results into a file.
+"""
 function dict2dataframes(results::Dict, measure::String; save_data::Bool = true)
     data_frame = DataFrame(
         "Experiment" => UInt64[],
@@ -221,6 +332,17 @@ function get_measure_name(data::Vector{String})
     return reg_match[first_match_index][2]
 end
 
+"""
+    aggregate_results(result[; save_data])
+
+Aggregate raw results by LDB method type and classifier type.
+
+# Arguments
+- `results`: Data frame of results.
+
+# Keyword Arguments
+- `save_data`: (Default: `true`) Whether to save the results into a file.
+"""
 function aggregate_results(result::DataFrame; save_data::Bool = true)
     results_grouped = groupby(result, [:Method, :Classifier])
     results_combined = combine(results_grouped, r"^Train" => mean, r"^Test" => mean, renamecols = false)
