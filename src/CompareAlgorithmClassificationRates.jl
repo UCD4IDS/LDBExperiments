@@ -13,8 +13,7 @@ using Wavelets,
       CSV,
       MLJ
 
-include("mod/utils.jl")
-import .LDBUtils: repeat_experiment, dict2dataframes, aggregate_results
+include("utils.jl")
 
 ## ========= Setup =========
 # TODO: Change wavelet filter
@@ -53,16 +52,13 @@ ldbkemd = LocalDiscriminantBasis(wt = wt,
                                  dp = dp,
                                  top_k = k,
                                  n_features = n_features)
-ldbs = Dict("original" => nothing, "ldbk" => ldbk, "ldbkash" => ldbkash, "ldbkemd" => ldbkemd)
+ldbs = Dict("ldbk" => ldbk, "ldbkash" => ldbkash, "ldbkemd" => ldbkemd)
 # TODO: Make hyperparameter changes if necessary
-LDA = @load LDA pkg=MultivariateStats verbosity=0
-CT = @load DecisionTreeClassifier pkg=DecisionTree verbosity=0
+LDA = @load LDA pkg=MultivariateStats
+CT = @load DecisionTreeClassifier pkg=DecisionTrees
 classifiers = Dict("LDA" => LDA(), "CT" => CT())
 # TODO: Make changes to model evaluation measures if necessary
-measures = [MisclassificationRate(), MulticlassPrecision(), MulticlassTruePositiveRate()]
+measures = [MisclassificationRate()]
 
 ## ========== Run experiments ==========
-# Set `save_data` to `true` to see the results in csv files.
-results_raw = repeat_experiment(ldbs, classifiers, measures; repeats = 100, save_data=false)
-results_by_measure = Dict("$((string ∘ typeof)(measure))" => dict2dataframes(results_raw, measure; save_data=false) for measure in measures)
-results_aggregate = Dict(key => aggregate_results(value; save_data=false) for (key, value) in results_by_measure)
+results = repeat_experiment(ldbs, classifiers, measurs)

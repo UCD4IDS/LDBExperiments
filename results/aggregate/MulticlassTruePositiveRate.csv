@@ -1,9 +1,0 @@
-Method,Classifier,"Train_MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}","Test_MulticlassTruePositiveRate{MLJBase.MacroAvg, OrderedCollections.LittleDict}"
-original,CT,1.0,0.8294794794794795
-original,LDA,1.0,0.6861961961961961
-ldbk,CT,1.0,0.8900300300300298
-ldbk,LDA,0.9078787878787864,0.871001001001001
-ldbkash,CT,1.0,0.6856256256256258
-ldbkash,LDA,0.7543434343434343,0.6022022022022023
-ldbkemd,CT,1.0,0.8980480480480479
-ldbkemd,LDA,0.9115151515151498,0.8745045045045045

@@ -60,8 +60,7 @@ using Wavelets,
       MLJ,
       DataFrames
 
-include("mod/utils.jl")
-import .LDBUtils: compute_ldb_vectors, plot_coefficients
+include("utils.jl")
 
 ## ========== Setup ==========
 train_x, train_y = generateclassdata(ClassData(:tri, 33 , 33 , 33 ), false)
@@ -176,18 +175,10 @@ ldbkash_test_ŷ  = predict_mode(ldbkash_classifier , ldbkash_test_features)
 ldbkemd_test_ŷ  = predict_mode(ldbkemd_classifier , ldbkemd_test_features)
 # Evaluate Model
 original_train_accuracy = Accuracy()(original_train_ŷ, train_y)
-@info "Original LDB Train Accuracy: $original_train_accuracy"
 ldbk_train_accuracy     = Accuracy()(ldbk_train_ŷ    , train_y)
-@info "LDBK Train Accuracy: $ldbk_train_accuracy"
 ldbkash_train_accuracy  = Accuracy()(ldbkash_train_ŷ , train_y)
-@info "LDBASH Train Accuracy: $ldbkash_train_accuracy"
 ldbkemd_train_accuracy  = Accuracy()(ldbkemd_train_ŷ , train_y)
-@info "LDBKEMD Train Accuracy: $ldbkemd_train_accuracy"
 original_test_accuracy = Accuracy()(original_test_ŷ, test_y)
-@info "Original LDB Test Accuracy: $original_test_accuracy"
 ldbk_test_accuracy     = Accuracy()(ldbk_test_ŷ    , test_y)
-@info "LDBK Test Accuracy: $ldbk_test_accuracy"
 ldbkash_test_accuracy  = Accuracy()(ldbkash_test_ŷ , test_y)
-@info "LDBKASH Test Accuracy: $ldbkash_test_accuracy"
 ldbkemd_test_accuracy  = Accuracy()(ldbkemd_test_ŷ , test_y)
-@info "LDBKEMD Test Accuracy: $ldbkemd_test_accuracy"

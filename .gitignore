@@ -28,6 +28,3 @@ docs/site/
 
 # Datasets folder for 2D LDB
 data/
-
-# Experiment data
-results/experiment_data
