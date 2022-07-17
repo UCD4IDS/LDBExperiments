@@ -1,0 +1,9 @@
+Method,Classifier,"Train_MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}","Test_MulticlassPrecision{MLJBase.MacroAvg, OrderedCollections.LittleDict}"
+original,CT,1.0,0.8324168204119888
+original,LDA,1.0,0.6911138710808395
+ldbk,CT,1.0,0.8918001732480954
+ldbk,LDA,0.911691336733242,0.8767270853809641
+ldbkash,CT,1.0,0.6884785053934752
+ldbkash,LDA,0.7542708373001245,0.5998302019495231
+ldbkemd,CT,1.0,0.900163897402604
+ldbkemd,LDA,0.9144976672480497,0.8802861344175866
