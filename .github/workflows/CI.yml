@@ -26,12 +26,17 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
+      - name: Checkout this repository
+        uses: actions/checkout@v2
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
+
+      - name: Cache Julia artifacts and such
+        uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
         with:
@@ -41,14 +46,17 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
+
       - name: Install dependencies
         run: julia --project -e 'using Pkg; Pkg.activate(mktempdir()); Pkg.instantiate()'
+
       - name: Run src/CompareAlgorithmVisualizations.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
           GKSwstype: "100" # https://discourse.julialang.org/t/generation-of-documentation-fails-qt-qpa-xcb-could-not-connect-to-display/60988
         run: julia --project src/CompareAlgorithmVisualizations.jl
+        
       - name: Run src/CompareAlgorithmVisualizations.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
