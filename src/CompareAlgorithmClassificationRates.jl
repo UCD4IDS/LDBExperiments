@@ -17,6 +17,7 @@ include("mod/utils.jl")
 import .LDBUtils: repeat_experiment, dict2dataframes, aggregate_results
 
 ## ========= Setup =========
+@info "LDB Object Setup"
 # TODO: Change wavelet filter
 wt = wavelet(WT.coif2)
 # TODO: Change decomposition levels
@@ -62,6 +63,7 @@ classifiers = Dict("LDA" => LDA(), "CT" => CT())
 measures = [MisclassificationRate(), MulticlassPrecision(), MulticlassTruePositiveRate()]
 
 ## ========== Run experiments ==========
+@info "Run Experiments"
 # Set `save_data` to `true` to see the results in csv files.
 results_raw = repeat_experiment(ldbs, classifiers, measures; repeats = 100, save_data=false)
 results_by_measure = Dict("$((string ∘ typeof)(measure))" => dict2dataframes(results_raw, measure; save_data=false) for measure in measures)
