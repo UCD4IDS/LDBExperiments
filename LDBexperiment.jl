@@ -14,6 +14,13 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ 72db7eae-c2a7-4d74-85a9-b89f7fe80e85
+let
+	import Pkg
+	Pkg.activate(".")
+	Pkg.instantiate()
+end
+
 # ╔═╡ 5ad9f0fb-3688-4b15-94c1-a18e5f41eeed
 begin
 	using 
@@ -2404,6 +2411,7 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╟─45f88030-a821-11eb-0c6d-f5c7c82b7115
+# ╠═72db7eae-c2a7-4d74-85a9-b89f7fe80e85
 # ╠═5ad9f0fb-3688-4b15-94c1-a18e5f41eeed
 # ╠═aa7ba1e0-ff23-4406-96a1-4406b4e94399
 # ╟─f3a892ef-0c5a-4d4a-86ab-036d913d9d97
