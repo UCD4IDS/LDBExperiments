@@ -35,20 +35,8 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
 
-      - name: Cache Julia artifacts and such
-        uses: actions/cache@v1
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
-
-      - name: Install dependencies
-        run: julia --project -e 'using Pkg; Pkg.activate(mktempdir()); Pkg.instantiate()'
+      - name: Build
+        uses: julia-actions/julia-buildpkg@master
 
       - name: Run src/CompareAlgorithmVisualizations.jl
         env:
@@ -56,7 +44,7 @@ jobs:
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
           GKSwstype: "100" # https://discourse.julialang.org/t/generation-of-documentation-fails-qt-qpa-xcb-could-not-connect-to-display/60988
         run: julia --project src/CompareAlgorithmVisualizations.jl
-        
+
       - name: Run src/CompareAlgorithmVisualizations.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
