@@ -60,7 +60,7 @@ using Wavelets,
       MLJ,
       DataFrames
 
-include("utils.jl")
+include("mod/utils.jl")
 import .LDBUtils: compute_ldb_vectors, plot_coefficients
 
 ## ========== Setup ==========
